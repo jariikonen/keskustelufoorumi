@@ -1,8 +1,8 @@
-# Tietokantasovellus
+# Keskustelufoorumi
 
 Aineopintojen harjoitustyö: Tietokantasovellus, kevät 2022.
 
-## Keskustelusovellus
+## Harjoitustyön aihe: keskustelufoorumi
 
 Projektin aiheena on kurssin esimerkkisovelluksissa kuvatun kaltainen keskustelusovellus. Sovelluksessa voidaan käydä keskusteluja useilla keskustelualueilla, joilla kullakin voi olla useita viestiketjuja. Jokainen käyttäjä on peruskäyttäjä tai ylläpitäjä.
 
