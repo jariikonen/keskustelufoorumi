@@ -1,7 +1,8 @@
 from app import app
-from flask import render_template, request
+from flask import redirect, render_template, request, session
 import topics
 import messages
+import users
 
 @app.route('/')
 def index():
@@ -28,7 +29,40 @@ def topic(topic_id):
 @app.route('/thread/<int:thread_id>')
 def thread(thread_id):
     message_list = messages.get_messages(thread_id)
-    writer_list = messages.get_writers(message_list)
+    writer_list = messages.get_writers(message_list)    # TÄMÄ VOITAISIIN YHDISTÄÄ EDELLISEEN -- TURHA!
     return render_template(
         'thread.html', message_list=message_list, writer_list=writer_list
     )
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'GET':
+        return render_template('register.html')
+    if request.method == 'POST':
+        username = request.form['username']
+        password1 = request.form['password1']
+        password2 = request.form['password2']
+        if password1 != password2:
+            return render_template('register.html', error='Salasanat eivät olleet samat!')
+        success, error = users.register(username, password1)
+        if success:
+            return redirect('/')
+        else:
+            return render_template('register.html', error=error)
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'GET':
+        return render_template('login.html')
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        if users.login(username, password):
+            return redirect('/')
+        else:
+            return render_template('login.html', error='Väärä tunnus tai salasana!')
+
+@app.route('/logout')
+def logout():
+    del session['username']
+    return redirect('/')

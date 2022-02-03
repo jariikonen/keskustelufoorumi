@@ -1,0 +1,18 @@
+{% extends "layout.html" %}
+{% block title %}Kirjaudu sisään{% endblock %}
+{% block login_nav_class %} active{% endblock %}
+{% block content %}
+      <div class="text-center">
+        {% if error %}
+        <div class="alert alert-danger" role="alert">
+          {{ error }}
+        </div>
+        {% endif %}
+        <form class="form-signin" action="/login" method="POST">
+          <h1 class="h3 mb-3 font-weight-normal">Kirjaudu sisään</h1>
+          <input type="text" id="inputUsername" class="form-control first" name="username" placeholder="Käyttäjätunnus" required autofocus>
+          <input type="password" id="inputPassword" class="form-control last" name="password" placeholder="Salasana" required>
+          <button class="btn btn-lg btn-primary btn-block" type="submit">Kirjaudu sisään</button>
+        </form>
+      </div>
+{% endblock %}

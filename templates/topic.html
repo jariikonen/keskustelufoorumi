@@ -1,5 +1,6 @@
 {% extends "layout.html" %}
 {% block title %}{{ topic.topic }}{% endblock %}
+{% block forum_nav_class %} active{% endblock %}
 {% block content %}
       <h1>{{ topic.topic }}</h1>
       <p class="lead">{{ topic.description }}</p>
