@@ -1,20 +1,28 @@
-.topic-list {
-  margin-top: 1%;
-  margin-bottom: 2%;
+.list-heading {
+  font-size: 1.25rem;
 }
 
-.topic-list th, .topic-list td {
+.message-heading {
+  font-size: 1.5rem;
+}
+
+.message-header {
+  /*background-color: #f8f9fa!important;*/
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  border-top-left-radius: 0.5rem!important;
+  border-top-right-radius: 0.5rem!important;
+}
+
+.message-content {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  padding-left: 1rem;
   padding-right: 1rem;
 }
 
-.topic-list td.center {
-  text-align: center;
-}
-
-.topic-item {
-  margin-bottom: 2%;
-}
-
-.topic-heading {
-  font-size: 1.25rem;
+.message-footer {
+  margin-bottom: 1rem;
 }

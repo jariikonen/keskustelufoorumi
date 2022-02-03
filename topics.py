@@ -7,6 +7,13 @@ def get_topics(restricted=False):
     )
     return result.fetchall()
 
+def get_topic(topic_id):
+    result = db.session.execute(
+        'SELECT * FROM topics WHERE id=:topic_id',
+        {'topic_id': topic_id}
+    )
+    return result.fetchone()
+
 def get_num_of_threads(topics):
     thread_nums = {}
     for topic in topics:

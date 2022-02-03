@@ -16,7 +16,8 @@ CREATE TABLE topics (
 CREATE TABLE messages (
     id SERIAL PRIMARY KEY,
     topic_id INTEGER REFERENCES topics,
-    parent_id INTEGER REFERENCES messages DEFAULT NULL,
+    refers_to INTEGER REFERENCES messages,
+    thread_id INTEGER REFERENCES messages,
     writer_id INTEGER REFERENCES users,
     heading TEXT,
     content TEXT,

@@ -1,32 +1,30 @@
 {% extends "layout.html" %}
 {% block title %}Etusivu{% endblock %}
 {% block content %}
-    <div class="container">
       <h1>Etusivu</h1>
       <p class="lead">Keskustelufoorumi on yksinkertainen Flask-pohjainen keskustelufoorumisovellus.</p>
       <p>Keskustelufoorumilla voit keskustella ylläpitäjien määrittämillä keskustelualueilla. Alla näet listauksen tämän hetkisistä keskustelualueista.</p>
       <h2>Yleiset keskustelualueet</h2>
       <p>Näitä keskusteluja kaikki voivat lukea ja kirjoittaa. Kirjoittaminen edellyttää rekisteröitymistä.</p>
-      <table class="topic-list">
+      <table class="table table-light">
         <tr>
           <th>Keskustelualue</th>
           <th>Aiheita</th>
           <th>Viestejä</th>
           <th>Uusin viesti</th>
         </tr>
-      {% for topic in topic_list %}
-      <tr>
-        <td>
-          <div class="topic-item">
-            <div class="topic-heading">{{ topic.topic }}</div>
-            <div class="description">{{ topic.description }}</div>
-          </div>
-        </td>
-        <td class="center">{{ thread_nums[topic.id] }}</td>
-        <td class="center">{{ message_nums[topic.id] }}</td>
-        <td>{{ latest_message_times[topic.id] }}</td>
-      </tr>
-      {% endfor %}
+        {% for topic in topic_list %}
+        <tr>
+          <td>
+            <div class="list-item">
+              <div class="list-heading"><a href="/topic/{{ topic.id }}">{{ topic.topic }}</a></div>
+              <div class="list-description">{{ topic.description }}</div>
+            </div>
+          </td>
+          <td>{{ thread_nums[topic.id] }}</td>
+          <td>{{ message_nums[topic.id] }}</td>
+          <td>{{ latest_message_times[topic.id] }}</td>
+        </tr>
+        {% endfor %}
       </table>
-    </div>
 {% endblock %}

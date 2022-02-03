@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% block title %}{{ topic.topic }}{% endblock %}
+{% block content %}
+      <h1>{{ topic.topic }}</h1>
+      <p class="lead">{{ topic.description }}</p>
+      <table class="table table-light">
+        <tr>
+          <th>Aihe</th>
+          <th>Viestejä</th>
+          <th>Uusin viesti</th>
+        </tr>
+        {% for thread in thread_list %}
+        <tr>
+          <td>
+            <div class="list-item">
+              <div class="list-heading"><a href="/thread/{{ thread.id }}">{{ thread.heading }}</a></div>
+              <div class="list-description">{{ thread[5] }}...</div>
+            </div>
+          </td>
+          <td>{{ message_nums[thread.id] }}</td>
+          <td>{{ latest_message_times[thread.id] }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+{% endblock %}
