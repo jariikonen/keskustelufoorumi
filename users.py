@@ -36,6 +36,9 @@ def login(username, password):
     sql = 'SELECT id, password FROM users WHERE username=:username'
     result = db.session.execute(sql, {'username':username})
     user = result.fetchone()
+    print('generated hash: ', generate_password_hash(password))
+    print('password: ', password)
+    print('from db: ', user.password)
     if user and user.password and password:
         if check_password_hash(user.password, password):
             set_user_session(user.id, username)
