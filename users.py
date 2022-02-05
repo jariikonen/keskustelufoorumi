@@ -17,7 +17,9 @@ def validate_user_data(username, password1, password2):
     return True, ''
 
 def register(username, password):
-    hash_value = generate_password_hash(password)
+    hash_value = None
+    if password != '':
+        hash_value = generate_password_hash(password)
     sql = '''
         INSERT INTO users (username, password)
         VALUES (:username, :password)
