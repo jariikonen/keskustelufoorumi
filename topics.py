@@ -1,3 +1,4 @@
+from sqlalchemy.exc import IntegrityError
 from db import db
 
 def get_topics(restricted=False):
@@ -48,3 +49,17 @@ def get_time_of_latest_message(topics):
         else:
             latest_message_times[topic.id] = '-'
     return latest_message_times
+
+def insert_topic(topic_dict):
+    sql = '''
+        INSERT INTO topics (topic, description)
+        VALUES (:topic, :description)
+        RETURNING id
+    '''
+    try:
+        result = db.session.execute(sql, topic_dict)
+        topic_id = result.fetchone()[0]
+    except IntegrityError:
+        return False, 'Aihealue on jo olemassa!'
+    db.session.commit()
+    return topic_id, ''

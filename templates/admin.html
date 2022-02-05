@@ -1,0 +1,32 @@
+{% extends "layout.html" %}
+{% block title %}Hallinta{% endblock %}
+{% block admin_nav_class %} active{% endblock %}
+{% block content %}
+    {% if alert %}
+      <div class="alert alert-{{ alert.class }}" role="alert">
+        {{ alert }}
+      </div>
+    {% endif %}
+    {% if error %}
+      <div class="alert alert-danger" role="alert">
+        {{ error }}
+      </div>
+    {% endif %}
+      <h1>Hallinta</h1>
+      <div class="alert alert-info" role="alert">
+        <strong>HUOM!</strong> Tässä kehitysvaiheessa, kun käyttöoikeuksia ei vielä ole toteutettu, kaikki käyttäjät pääsevät hallintaan.
+      </div>
+      <form action="/admin" method="POST">
+        <h3>Keskustelualueiden lisääminen</h3>
+        <div class="form-group">
+          <label for="topic">Nimi</label>
+          <input type="text" class="form-control" name="topic" autofocus>
+        </div>
+        <div class="form-group">
+          <label for="description">Kuvaus</label>
+          <textarea class="form-control" name="description" rows="2"></textarea>
+        </div>
+        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+        <button class="btn btn-lg btn-primary mb-2" type="submit">Lisää keskustelualue</button>
+      </form>
+{% endblock %}

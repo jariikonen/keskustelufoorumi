@@ -95,18 +95,18 @@ def update_thread_id(message_id, thread_id):
         sql, {'thread_id': thread_id, 'message_id': message_id}
     )
 
-def insert_message(data_dict):
+def insert_message(message_dict):
     sql = '''
         INSERT INTO messages (topic_id, refers_to, thread_id, writer_id, heading, content)
         VALUES (:topic_id, :refers_to, :thread_id, :writer_id, :heading, :content)
         RETURNING id
     '''
-    data_dict = variables.set_empty_to_none(data_dict)
-    result = db.session.execute(sql, data_dict)
+    message_dict = variables.set_empty_to_none(message_dict)
+    result = db.session.execute(sql, message_dict)
     message_id = result.fetchone()[0]
-    if not data_dict['thread_id']:
-        if data_dict['refers_to']:
-            update_thread_id(message_id, data_dict['refers_to'])
+    if not message_dict['thread_id']:
+        if message_dict['refers_to']:
+            update_thread_id(message_id, message_dict['refers_to'])
         else:
             update_thread_id(message_id, message_id)
     db.session.commit()

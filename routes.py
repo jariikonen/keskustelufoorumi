@@ -1,3 +1,4 @@
+import secrets
 from app import app
 from flask import redirect, render_template, request, session, url_for
 import topics
@@ -128,3 +129,25 @@ def post():
         }
         messages.insert_message(message_data)
         return redirect(f'/{request.form.get("return_url", "")}')
+
+@app.route('/admin', methods=['GET', 'POST'])
+def admin():
+    if request.method == 'GET':
+        if 'csrf_token' not in session:
+            session['csrf_token'] = secrets.token_hex(16)
+        return render_template('admin.html')
+    if request.method == 'POST':
+        csrf_token = request.form.get('csrf_token', None)
+        if csrf_token != session['csrf_token']:
+            return post_get('Toimenpide ei ole oikeutettu (puuttuva tunniste)!')
+        
+        topic_data = {
+            'topic': request.form['topic'],
+            'description': request.form['description']
+        }
+        topic_id, error = topics.insert_topic(topic_data)
+        if topic_id:
+            return redirect(f'/topic/{topic_id}')
+        else:
+            return render_template('admin.html', error=error)
+    
