@@ -1,9 +1,21 @@
 {% extends "layout.html" %}
 {% block title %}{{ topic.topic }}{% endblock %}
+{% block return_arg %}?return_url=topic/{{ topic.id }}{% endblock %}
 {% block forum_nav_class %} active{% endblock %}
 {% block content %}
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="/">Keskustelut</a>
+          </li>
+          <li class="breadcrumb-item active" aria-current="page">
+            {{ topic.topic }}
+          </li>
+        </ol>
+      </nav>
       <h1>{{ topic.topic }}</h1>
       <p class="lead">{{ topic.description }}</p>
+      <a class="btn btn-primary" href="/post?topic={{ topic.id }}" role="button">Aloita uusi viestiketju</a>
       <table class="table table-light">
         <tr>
           <th>Aihe</th>

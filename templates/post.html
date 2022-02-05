@@ -1,0 +1,64 @@
+{% extends "layout.html" %}
+{% block title %}Uusi viesti{% endblock %}
+{% block return_arg %}?return_url={{ return_url }}{% endblock %}
+{% block forum_nav_class %} active{% endblock %}
+{% block content %}
+    {% if error %}
+      <div class="text-center">
+        <div class="alert alert-danger" role="alert">
+          {{ error }}
+        </div>
+      </div>
+    {% endif %}
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item">
+            <a href="/">Keskustelut</a>
+          </li>
+          <li class="breadcrumb-item">
+            <a href="/topic/{{ topic.id }}">{{ topic.topic }}</a>
+          </li>
+    {% if thread %}
+          <li class="breadcrumb-item">
+            <a href="/thread/{{ thread.id }}">{{ thread.heading }}</a>
+          </li>
+          <li class="breadcrumb-item active" aria-current="page">
+            Uusi viesti
+          </li>
+        </ol>
+      </nav>
+      <h1>Uusi viesti</h1>
+        {% if reply_to %}
+      <div class="post-meta">
+        Vastauksena viestiin "{{ reply_to.heading }}", {{ reply_to.sent_at.strftime("%d.%m.%Y klo %H:%M") }}, {{ reply_to.writer }}</li>
+      </div>
+        {% else %}
+      <div class="post-meta">
+        Vastauksena ketjuun "{{ thread.heading }}", {{ thread.sent_at.strftime("%d.%m.%Y klo %H:%M") }}, {{ thread.writer }}</li>
+      </div>
+        {% endif %}
+    {% else %}
+          <li class="breadcrumb-item active" aria-current="page">
+            Uusi ketju
+          </li>
+        </ol>
+      </nav>
+      <h1>Uusi ketju</h1>
+    {% endif %}
+      <form action="/post" method="POST">
+        <div class="form-group">
+          <label for="heading">Otsikko</label>
+          <input type="text" class="form-control" name="heading" value="{% if reply_to %}VS: {{ reply_to.heading }}"{% else %}" autofocus{% endif %}>
+        </div>
+        <div class="form-group">
+          <label for="content">Viesti</label>
+          <textarea class="form-control" name="content" rows="4"{% if reply_to %} autofocus{% endif %}></textarea>
+        </div>
+        <input type="hidden" name="topic_id" value="{{ topic.id }}">
+        <input type="hidden" name="refers_to" value="{{ reply_to.id }}">
+        <input type="hidden" name="thread_id" value="{{ thread.id }}">
+        <input type="hidden" name="return_url" value="{{ return_url }}">
+        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+        <button class="btn btn-lg btn-primary mb-2" type="submit">Lähetä</button>
+      </form>
+{% endblock %}

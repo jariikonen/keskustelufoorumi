@@ -2,6 +2,13 @@
 {% block title %}Etusivu{% endblock %}
 {% block forum_nav_class %} active{% endblock %}
 {% block content %}
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item active" aria-current="page">
+            <a href="/">Keskustelut</a>
+          </li>
+        </ol>
+      </nav>
       <h1>Keskustelufoorumi</h1>
       <p class="lead">Keskustelufoorumi on yksinkertainen Flask-pohjainen keskustelufoorumisovellus. Tältä sivulta löydät itse foorumin, eli käynnissä olevat keskustelut.</p>
       <p>Keskustelufoorumilla voit keskustella ylläpitäjien määrittämillä keskustelualueilla. Alla näet listauksen tämän hetkisistä keskustelualueista.</p>

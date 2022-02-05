@@ -18,7 +18,7 @@ def get_num_of_threads(topics):
     thread_nums = {}
     for topic in topics:
         result = db.session.execute(
-            'SELECT COUNT(*) FROM messages WHERE parent_id IS NULL AND topic_id=:id',
+            'SELECT COUNT(*) FROM messages WHERE refers_to IS NULL AND topic_id=:id',
             {'id': topic.id}
         )
         thread_nums[topic.id] = result.fetchone()[0]

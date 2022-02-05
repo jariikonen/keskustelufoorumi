@@ -1,3 +1,6 @@
+{%- macro return_arg() -%}
+    {% block return_arg %}{% endblock %}
+{%- endmacro -%}
 <!DOCTYPE html>
 <html lang="fi">
   <head>
@@ -12,22 +15,22 @@
       <a class="navbar-brand" href="/">Keskustelufoorumi</a>
       <ul class="navbar-nav">
         <li class="nav-item{% block forum_nav_class %}{% endblock %}">
-          <a class="nav-link" href="/">Keskustelut</a>
+          <a class="nav-link" href="/topics">Keskustelut</a>
         </li>
         <li class="nav-item{% block admin_nav_class %}{% endblock %}">
           <a class="nav-link" href="/admin">Hallinta</a>
         </li>
         {% if session.username %}
         <li class="nav-item">
-          <a class="nav-link" href="/logout">Kirjaa ulos: <span class="username">{{ session.username }}</span></a>
+          <a class="nav-link" href="/logout{{ return_arg() }}">Kirjaa ulos: <span class="username">{{ session.username }}</span></a>
         </li>
         {% else %}
         <li class="nav-item{% block login_nav_class %}{% endblock %}">
-          <a class="nav-link" href="/login">Kirjaudu</a>
+          <a class="nav-link" href="/login{{ return_arg() }}">Kirjaudu</a>
         </li>
         {% endif %}
         <li class="nav-item{% block register_nav_class %}{% endblock %}">
-          <a class="nav-link" href="/register">Rekisteröidy</a>
+          <a class="nav-link" href="/register{{ return_arg() }}">Rekisteröidy</a>
         </li>
       </ul>
     </nav>
