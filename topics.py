@@ -45,17 +45,17 @@ def get_time_of_latest_message(topics):
         latest_message_times[topic.id] = result.fetchone()[0]
         if latest_message_times[topic.id]:
             latest_message_times[topic.id]\
-                = latest_message_times[topic.id].strftime("%d.%m.%Y klo %H:%M")
+                = latest_message_times[topic.id].strftime('%d.%m.%Y klo %H:%M')
         else:
             latest_message_times[topic.id] = '-'
     return latest_message_times
 
 def insert_topic(topic_dict):
-    sql = '''
+    sql = """
         INSERT INTO topics (topic, description)
         VALUES (:topic, :description)
         RETURNING id
-    '''
+    """
     try:
         result = db.session.execute(sql, topic_dict)
         topic_id = result.fetchone()[0]

@@ -1,4 +1,4 @@
-{% extends "layout.html" %}
+{% extends 'layout.html' %}
 {% block title %}{{ message_list[0].heading }}{% endblock %}
 {% block return_arg %}?return_url=thread/{{ message_list[0].thread_id }}{% endblock %}
 {% block forum_nav_class %} active{% endblock %}
@@ -22,7 +22,7 @@
         <div class="message-item">
           <div class="message-header rounded-top">
             <div class="message-heading">{{ message.heading }}</div>
-            <div class="message-meta">{{ message.sent_at.strftime("%d.%m.%Y klo %H:%M") }}, <a href="#">{{ message.writer }}</a></div>
+            <div class="message-meta">{{ message.sent_at.strftime('%d.%m.%Y klo %H:%M') }}, <a href="#">{{ message.writer }}</a></div>
           </div>
           <div class="message-content">{{ message.content }}</div>
           <div class="message-footer"><a class="btn btn-link" href="{{ url_for('post', topic=message.topic_id, thread=message.thread_id, reply=message.id) }}">Vastaa</a></div>

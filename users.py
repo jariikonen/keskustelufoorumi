@@ -20,11 +20,11 @@ def register(username, password):
     hash_value = None
     if password != '':
         hash_value = generate_password_hash(password)
-    sql = '''
+    sql = """
         INSERT INTO users (username, password)
         VALUES (:username, :password)
         RETURNING id
-    '''
+    """
     try:
         result = db.session.execute(sql, {'username':username, 'password':hash_value})
         user_id = result.fetchone()[0]

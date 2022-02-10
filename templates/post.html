@@ -1,4 +1,4 @@
-{% extends "layout.html" %}
+{% extends 'layout.html' %}
 {% block title %}Uusi viesti{% endblock %}
 {% block return_arg %}?return_url={{ return_url }}{% endblock %}
 {% block forum_nav_class %} active{% endblock %}
@@ -30,11 +30,11 @@
       <h1>Uusi viesti</h1>
         {% if reply_to %}
       <div class="post-meta">
-        Vastauksena viestiin "{{ reply_to.heading }}", {{ reply_to.sent_at.strftime("%d.%m.%Y klo %H:%M") }}, {{ reply_to.writer }}</li>
+        Vastauksena viestiin "{{ reply_to.heading }}", {{ reply_to.sent_at.strftime('%d.%m.%Y klo %H:%M') }}, {{ reply_to.writer }}</li>
       </div>
         {% else %}
       <div class="post-meta">
-        Vastauksena ketjuun "{{ thread.heading }}", {{ thread.sent_at.strftime("%d.%m.%Y klo %H:%M") }}, {{ thread.writer }}</li>
+        Vastauksena ketjuun "{{ thread.heading }}", {{ thread.sent_at.strftime('%d.%m.%Y klo %H:%M') }}, {{ thread.writer }}</li>
       </div>
         {% endif %}
     {% else %}
