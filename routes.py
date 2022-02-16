@@ -84,22 +84,24 @@ def logout():
     return redirect(f'/{request.args.get("return_url", "")}')
 
 @app.route('/post', methods=['GET'])
-def post_get(error=None, return_url=''):
-    topic_id = request.args.get('topic', 0)
-    thread_id = request.args.get('thread', 0)
-    reply_to_id = request.args.get('reply', 0)
+def post_get(error=None, return_url='', topic_id=0, thread_id=0, reply_to_id=0):
+    print(f'error {error}, return_url {return_url}, topic_id {topic_id}, thread_id {thread_id}, reply_to_id {reply_to_id}')
+    if not error:
+        topic_id = request.args.get('topic', 0)
+        thread_id = request.args.get('thread', 0)
+        reply_to_id = request.args.get('reply', 0)
     if not error and 'username' not in session:
         return_url = f'post?topic={topic_id}&thread={thread_id}&reply={reply_to_id}'
         return render_template('login.html', return_url=return_url)
 
-    topic_obj = topics.get_topic(topic_id)
-    thread_obj = messages.get_message(thread_id)
-    reply_obj = messages.get_message(reply_to_id)
+    topic_row = topics.get_topic(topic_id)
+    thread_row = messages.get_message(thread_id)
+    reply_row = messages.get_message(reply_to_id)
     if error:
         return render_template(
-            'post.html', return_url=return_url, topic=topic_obj,
-            thread=thread_obj, reply_to=reply_obj
-        )    
+            'post.html', error=error, return_url=return_url, topic=topic_row,
+            thread=thread_row, reply_to=reply_row
+        )
 
     return_url = ''
     if thread_id:
@@ -107,16 +109,22 @@ def post_get(error=None, return_url=''):
     else:
         return_url = f'topic/{topic_id}'
     return render_template(
-        'post.html', return_url=return_url, topic=topic_obj,
-        thread=thread_obj, reply_to=reply_obj
+        'post.html', return_url=return_url, topic=topic_row,
+        thread=thread_row, reply_to=reply_row
     )
 
 @app.route('/post', methods=['POST'])
 def post_post():
     csrf_token = request.form.get('csrf_token', None)
     if csrf_token != session['csrf_token']:
-        return post_get('Toimenpide ei ole oikeutettu (puuttuva tunniste)!')
-    
+        return post_get(
+            error='Toimenpide ei ole oikeutettu (puuttuva tunniste)!',
+            return_url=request.form['return_url'],
+            topic_id=request.form.get('topic_id', 0),
+            thread_id=request.form.get('thread_id', 0),
+            reply_to_id=request.form.get('refers_to', 0)
+        )
+
     message_data = {
         'topic_id': request.form['topic_id'],
         'refers_to': request.form['refers_to'],
@@ -126,7 +134,7 @@ def post_post():
         'content': request.form['content']
     }
     messages.insert_message(message_data)
-    return redirect(f'/{request.form.get("return_url", "")}')
+    return redirect(f'/{request.form["return_url"]}')
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
