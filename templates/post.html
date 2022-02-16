@@ -54,11 +54,11 @@
           <label for="content">Viesti</label>
           <textarea class="form-control" name="content" rows="4"{% if reply_to %} autofocus{% endif %}></textarea>
         </div>
-        <input type="hidden" name="topic_id" value="{{ topic.id if topic.id else 0 }}">
-        <input type="hidden" name="refers_to" value="{{ reply_to.id if reply_to.id else 0 }}">
-        <input type="hidden" name="thread_id" value="{{ thread.id if thread.id else 0 }}">
+        <input type="hidden" name="topic_id" value="{{ topic.id }}">
+        <input type="hidden" name="refers_to" value="{{ reply_to.id }}">
+        <input type="hidden" name="thread_id" value="{{ thread.id }}">
         <input type="hidden" name="return_url" value="{{ return_url }}">
-        <input type="hidden" name="csrf_token" value="session.csrf_token">
+        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
         <button class="btn btn-lg btn-primary mb-2" type="submit">Lähetä</button>
       </form>
 {% endblock %}

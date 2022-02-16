@@ -94,9 +94,9 @@ def post_get(error=None, return_url='', topic_id=0, thread_id=0, reply_to_id=0):
         return_url = f'post?topic={topic_id}&thread={thread_id}&reply={reply_to_id}'
         return render_template('login.html', return_url=return_url)
 
-    topic_row = topics.get_topic(topic_id)
-    thread_row = messages.get_message(thread_id)
-    reply_row = messages.get_message(reply_to_id)
+    topic_row = topics.get_topic(topic_id if topic_id else 0)
+    thread_row = messages.get_message(thread_id if thread_id else 0)
+    reply_row = messages.get_message(reply_to_id if reply_to_id else 0)
     if error:
         return render_template(
             'post.html', error=error, return_url=return_url, topic=topic_row,
