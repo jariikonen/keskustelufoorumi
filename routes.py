@@ -83,6 +83,7 @@ def logout():
     users.logout()
     return redirect(f'/{request.args.get("return_url", "")}')
 
+@app.route('/post', methods=['GET'])
 def post_get(error=None, return_url=''):
     topic_id = request.args.get('topic', 0)
     thread_id = request.args.get('thread', 0)
@@ -110,25 +111,22 @@ def post_get(error=None, return_url=''):
         thread=thread_obj, reply_to=reply_obj
     )
 
-@app.route('/post', methods=['GET', 'POST'])
-def post():
-    if request.method == 'GET':
-        return post_get()
-    if request.method == 'POST':
-        csrf_token = request.form.get('csrf_token', None)
-        if csrf_token != session['csrf_token']:
-            return post_get('Toimenpide ei ole oikeutettu (puuttuva tunniste)!')
-        
-        message_data = {
-            'topic_id': request.form['topic_id'],
-            'refers_to': request.form['refers_to'],
-            'thread_id': request.form['thread_id'],
-            'writer_id': session['user_id'],
-            'heading': request.form['heading'],
-            'content': request.form['content']
-        }
-        messages.insert_message(message_data)
-        return redirect(f'/{request.form.get("return_url", "")}')
+@app.route('/post', methods=['POST'])
+def post_post():
+    csrf_token = request.form.get('csrf_token', None)
+    if csrf_token != session['csrf_token']:
+        return post_get('Toimenpide ei ole oikeutettu (puuttuva tunniste)!')
+    
+    message_data = {
+        'topic_id': request.form['topic_id'],
+        'refers_to': request.form['refers_to'],
+        'thread_id': request.form['thread_id'],
+        'writer_id': session['user_id'],
+        'heading': request.form['heading'],
+        'content': request.form['content']
+    }
+    messages.insert_message(message_data)
+    return redirect(f'/{request.form.get("return_url", "")}')
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
