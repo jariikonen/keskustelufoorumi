@@ -2,6 +2,26 @@
   font-size: 1.25rem;
 }
 
+.thread-header {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.thread-meta {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.first-message {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.thread-header .buttons {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
 .message-heading {
   font-size: 1.5rem;
 }

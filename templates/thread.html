@@ -16,7 +16,14 @@
           </li>
         </ol>
       </nav>
-      <h1>{{ message_list[0].heading }}</h1>
+      <div class="thread-header">
+        <h1>{{ message_list[0].heading }}</h1>
+        <div class="thread-meta">Aloittanut <a href="#">{{ message_list[0].writer }}</a>, {{ message_list[0].sent_at.strftime('%d.%m.%Y klo %H:%M') }}</div>
+        <div class="first-message"><span class="lead">{{ message_list[0].content[0:100] }} ...</span> <a href="#">Näytä koko viesti</a></div>
+        <div class="buttons">
+          <a class="btn btn-primary" href="{{ url_for('post_get', topic=message_list[0].topic_id, thread=message_list[0].thread_id) }}" role="button">Uusi viesti ketjuun</a>
+        </div>
+      </div>
       <div class="container message-list">
       {% for message in message_list %}
         <div class="message-item">
@@ -25,7 +32,7 @@
             <div class="message-meta">{{ message.sent_at.strftime('%d.%m.%Y klo %H:%M') }}, <a href="#">{{ message.writer }}</a></div>
           </div>
           <div class="message-content">{{ message.content }}</div>
-          <div class="message-footer"><a class="btn btn-link" href="{{ url_for('post', topic=message.topic_id, thread=message.thread_id, reply=message.id) }}">Vastaa</a></div>
+          <div class="message-footer"><a class="btn btn-link" href="{{ url_for('post_get', topic=message.topic_id, thread=message.thread_id, reply=message.id) }}">Vastaa</a></div>
         </div>
       {% endfor %}
       </div>
