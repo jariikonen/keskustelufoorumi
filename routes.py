@@ -89,7 +89,7 @@ def post_get(error=None, return_url='', topic_id=0, thread_id=0, reply_to_id=0):
         topic_id = request.args.get('topic', 0)
         thread_id = request.args.get('thread', 0)
         reply_to_id = request.args.get('reply', 0)
-    if not error and 'username' not in session:
+    if 'username' not in session:
         return_url = f'post?topic={topic_id}&thread={thread_id}&reply={reply_to_id}'
         return render_template('login.html', return_url=return_url)
 
