@@ -26,12 +26,12 @@ def topic_list():
 
 @app.route('/topic/<int:topic_id>')
 def topic(topic_id):
-    topic_obj = topics.get_topic(topic_id)
+    topic_row = topics.get_topic(topic_id)
     thread_list = messages.get_message_threads(topic_id)
     message_nums = messages.get_num_of_messages(thread_list)
     latest_message_times = messages.get_time_of_latest_message(thread_list)
     return render_template(
-        'topic.html', topic=topic_obj, thread_list=thread_list,
+        'topic.html', topic=topic_row, thread_list=thread_list,
         message_nums=message_nums, latest_message_times=latest_message_times
     )
 
@@ -60,9 +60,9 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
-        return_url = request.args.get('return_url', None)
+        return_url = request.args.get('return_url')
         if not return_url:
-            return_url = request.form.get('return_url', None)
+            return_url = request.form.get('return_url')
         return render_template('login.html', return_url=return_url)
     if request.method == 'POST':
         username = request.form['username']
@@ -85,7 +85,6 @@ def logout():
 
 @app.route('/post', methods=['GET'])
 def post_get(error=None, return_url='', topic_id=0, thread_id=0, reply_to_id=0):
-    print(f'error {error}, return_url {return_url}, topic_id {topic_id}, thread_id {thread_id}, reply_to_id {reply_to_id}')
     if not error:
         topic_id = request.args.get('topic', 0)
         thread_id = request.args.get('thread', 0)
@@ -115,7 +114,7 @@ def post_get(error=None, return_url='', topic_id=0, thread_id=0, reply_to_id=0):
 
 @app.route('/post', methods=['POST'])
 def post_post():
-    csrf_token = request.form.get('csrf_token', None)
+    csrf_token = request.form.get('csrf_token')
     if csrf_token != session['csrf_token']:
         return post_get(
             error='Toimenpide ei ole oikeutettu (puuttuva tunniste)!',
@@ -133,8 +132,18 @@ def post_post():
         'heading': request.form['heading'],
         'content': request.form['content']
     }
-    messages.insert_message(message_data)
-    return redirect(f'/{request.form["return_url"]}')
+    error = messages.check_message_data(message_data)
+    if not error:
+        messages.insert_message(message_data)
+        return redirect(f'/{request.form["return_url"]}')
+    else:
+        return post_get(
+            error,
+            return_url=request.form['return_url'],
+            topic_id=request.form.get('topic_id', 0),
+            thread_id=request.form.get('thread_id', 0),
+            reply_to_id=request.form.get('refers_to', 0)
+        )
 
 @app.route('/admin', methods=['GET', 'POST'])
 def admin():
@@ -143,7 +152,7 @@ def admin():
             session['csrf_token'] = secrets.token_hex(16)
         return render_template('admin.html')
     if request.method == 'POST':
-        csrf_token = request.form.get('csrf_token', None)
+        csrf_token = request.form.get('csrf_token')
         if csrf_token != session['csrf_token']:
             return post_get('Toimenpide ei ole oikeutettu (puuttuva tunniste)!')
         

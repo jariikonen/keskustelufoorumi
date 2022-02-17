@@ -87,6 +87,15 @@ def get_message_full(message_id):
     result = db.session.execute(sql, {'id': message_id})
     return result.fetchone()
 
+def check_message_data(message_data):
+    if message_data['heading'] == '':
+        return 'Otsikko ei saa olla tyhjä!'
+    if message_data['content'] == '':
+        return 'Viestin sisältö ei saa olla tyhjä'
+    if message_data['refers_to'] == '':
+        message_data['refers_to'] = message_data['thread_id']
+    return None
+
 def update_thread_id(message_id, thread_id):
     sql = """
         UPDATE messages SET thread_id=:thread_id WHERE id=:message_id
