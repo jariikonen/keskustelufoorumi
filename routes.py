@@ -90,7 +90,7 @@ def thread(thread_id, error=None):
 def register():
     if request.method == 'GET':
         return render_template(
-            'register.html', return_url=request.args.get('return_url')
+            'register.html', return_url=request.args.get('return_url', '')
         )
     if request.method == 'POST':
         username = request.form['username']
@@ -102,8 +102,7 @@ def register():
         success, error = users.register(username, password1)
         if success:
             return redirect(f"/{request.form.get('return_url')}")
-        else:
-            return render_template('register.html', error=error)
+        return render_template('register.html', error=error)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -120,11 +119,10 @@ def login():
             return_url = request.form.get('return_url', '')
         if auth.login(username, password):
             return redirect(f'/{return_url}')
-        else:
-            return render_template(
-                'login.html', error='Väärä tunnus tai salasana!',
-                return_url=return_url
-            )
+        return render_template(
+            'login.html', error='Väärä tunnus tai salasana!',
+            return_url=return_url
+        )
 
 @app.route('/logout')
 def logout():

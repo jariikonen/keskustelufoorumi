@@ -31,7 +31,7 @@ Huom! Aihealueiden lisääminen löytyy hallintasivulta.
 
 Alkuperäisestä toiminnallisuuslistasta on vielä toteuttamatta viestien ja ketjujen poistaminen, hakutoiminto ja keskustelualueen näkyvyyden / käyttöoikeuksien asettaminen. Lisäksi sovellukseen on tarkoitus toteuttaa mahdollisuus katsella ja muokata omia käyttäjätietoja sekä toteuttaa hallintapaneelin laajemmat keskustelualuiden ja käyttäjätilien hallintaominaisuudet.
 
-Toteutin sovellukseen käyttöoikeusjärjestelmän, jossa on kolme käyttäjäroolia: käyttäjä (user), ylläpitä (admin) ja pääkäyttäjä (super). Lisäksi keskustelualueisiin liittyy kaksi ryhmää ALL (kaikki käyttäjät) ja keskustelualueen mukaan nimetty ryhmä keskustelualueen etuoikeutetuille käyttäjille. Näille ryhmille voidaan antaa seuraavat kolme oikeutta: oikeus tietää ryhmän olemassaolosta (know; näkyvyys), lukuoikeus (read) ja kirjoitusoikeus (write).
+Toteutin sovellukseen käyttöoikeusjärjestelmän, jossa on kolme käyttäjäroolia: käyttäjä (user), ylläpitä (admin) ja pääkäyttäjä (super). Lisäksi keskustelualueisiin liittyy kaksi ryhmää ALL (kaikki käyttäjät) ja keskustelualueen mukaan nimetty ryhmä keskustelualueen etuoikeutetuille käyttäjille. Näille ryhmille voidaan antaa seuraavat kolme oikeutta: oikeus tietää ryhmän olemassaolosta (know), lukuoikeus (read) ja kirjoitusoikeus (write).
 
 Lopulliseen sovellukseen on tarkoitus toteuttaa vielä mahdollisuuksien mukaan seuraavia toiminnallisuuksia:
 
