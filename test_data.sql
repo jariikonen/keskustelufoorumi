@@ -7,19 +7,19 @@ VALUES (
 INSERT INTO topics (topic, description)
 VALUES (
     'Rajoitettu keskustelualue',
-    'Rajoitettu keskustelualue, jota kaikki voivat lukea, mutta jolle vain ryhmän jäsenet voivat kirjoittaa.'
+    'Rajoitettu keskustelualue, jota kaikki voivat lukea, mutta jolle vain ryhmän jäsenet (sekä ylläpitäjät ja pääkäyttäjät) voivat kirjoittaa.'
 );
 
 INSERT INTO topics (topic, description)
 VALUES (
     'Suljettu keskustelualue',
-    'Suljettu keskustelualue, jolla ryhmän jäsenet voivat keskustella luottamuksellisesti.'
+    'Suljettu keskustelualue, jolla ryhmän jäsenet voivat keskustella luottamuksellisesti. Toisin sanottuna kaikki voivat tietää ryhmän olemassaolosta, mutta vain ryhmän jäsenet (sekä ylläpitäjät ja pääkäyttäjät) voivat lukea tai kirjoittaa.'
 );
 
 INSERT INTO topics (topic, description)
 VALUES (
     'Salainen keskustelualue',
-    'Salainen keskustelualue, jolla salaseuran sisäpiiri voi keskustella salaisista asioista. Keskustelualue näkyy vain ryhmän jäsenille.'
+    'Salainen keskustelualue, jolla salaseuran sisäpiiri voi keskustella salaisista asioista. Keskustelualue näkyy vain ryhmän jäsenille (sekä ylläpitäjille ja pääkäyttäjille).'
 );
 
 INSERT INTO groups (group_name) VALUES ('Yleinen keskustelualue');
