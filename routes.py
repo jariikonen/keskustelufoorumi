@@ -1,9 +1,10 @@
-import secrets
 from app import app
-from flask import redirect, render_template, request, session, url_for
+from flask import redirect, render_template, request, session
+from constants import *
 import topics
 import messages
 import users
+import auth
 
 @app.route('/')
 def index():
@@ -14,31 +15,76 @@ def topic_root():
     return redirect('/topics')
 
 @app.route('/topics')
-def topic_list():
+def topic_list(error=None):
+    user_memberships = session.get('memberships', (3,))
+    user_role = session.get('role')
     topic_list = topics.get_topics()
+    topic_privileges = topics.get_all_topic_privileges()
+    secret_topics = topics.get_secret_topics(
+        topic_list, topic_privileges, user_memberships, user_role
+    )
     thread_nums = topics.get_num_of_threads(topic_list)
     message_nums = topics.get_num_of_messages(topic_list)
     latest_message_times = topics.get_time_of_latest_message(topic_list)
     return render_template(
-        'topic-list.html', topic_list=topic_list, thread_nums=thread_nums,
-        message_nums=message_nums, latest_message_times=latest_message_times
+        'topic-list.html', topic_list=topic_list, secret_topics=secret_topics,
+        tpriv=topic_privileges, thread_nums=thread_nums,
+        message_nums=message_nums, latest_message_times=latest_message_times,
+        error=error
     )
 
 @app.route('/topic/<int:topic_id>')
-def topic(topic_id):
+def topic(topic_id, error=None):
+    if topic_id == 0:
+        return redirect('/topics')
+
     topic_row = topics.get_topic(topic_id)
-    thread_list = messages.get_message_threads(topic_id)
-    message_nums = messages.get_num_of_messages(thread_list)
-    latest_message_times = messages.get_time_of_latest_message(thread_list)
-    return render_template(
-        'topic.html', topic=topic_row, thread_list=thread_list,
-        message_nums=message_nums, latest_message_times=latest_message_times
-    )
+    topic_privileges = auth.has_privilege(topic_id, PRIVILEGE_READ)
+    if topic_privileges:
+        thread_list = messages.get_message_threads(topic_id)
+        message_nums = messages.get_num_of_messages(thread_list)
+        latest_message_times = messages.get_time_of_latest_message(thread_list)
+        logout_return = f'topic/{topic_id}'
+        if not auth.all_has_privilege(topic_privileges, PRIVILEGE_READ):
+            logout_return = 'topics'
+        return render_template(
+            'topic.html', topic=topic_row, thread_list=thread_list,
+            message_nums=message_nums, latest_message_times=latest_message_times,
+            logout_return=logout_return, error=error
+        )
+    elif 'username' not in session:
+        return_url = f'topic/{topic_id}'
+        return render_template('login.html', return_url=return_url)
+
+    return topic_list(
+        'Sinulla ei ole lukuoikeutta keskustelualueeseen!'
+    ), HTTP_FORBIDDEN
 
 @app.route('/thread/<int:thread_id>')
-def thread(thread_id):
+def thread(thread_id, error=None):
+    if thread_id == 0:
+        return redirect('/topics')
+
     message_list = messages.get_messages(thread_id)
-    return render_template('thread.html', message_list=message_list)
+    if len(message_list) == 0:
+        return render_template(
+            'error.html', reponse_code=HTTP_NOT_FOUND,
+            message='Viestiketjua ei löytynyt'
+        ), HTTP_NOT_FOUND
+    
+    topic_id = message_list[0].topic_id
+    topic_privileges = auth.has_privilege(topic_id, PRIVILEGE_READ)
+    if not topic_privileges:
+        return topic_list(
+            'Sinulla ei ole lukuoikeutta keskustelualueeseen!'
+        ), HTTP_FORBIDDEN
+    logout_return = f'thread/{thread_id}'
+    if not auth.all_has_privilege(topic_privileges, PRIVILEGE_READ):
+        logout_return = 'topics'
+    return render_template(
+        'thread.html', message_list=message_list, logout_return=logout_return,
+        error=error
+    )
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -70,7 +116,7 @@ def login():
         return_url = request.args.get('return_url', '')
         if return_url == '':
             return_url = request.form.get('return_url', '')
-        if users.login(username, password):
+        if auth.login(username, password):
             return redirect(f'/{return_url}')
         else:
             return render_template(
@@ -80,35 +126,62 @@ def login():
 
 @app.route('/logout')
 def logout():
-    users.logout()
+    auth.logout()
     return redirect(f'/{request.args.get("return_url", "")}')
 
 @app.route('/post', methods=['GET'])
-def post_get(error=None, return_url='', topic_id=0, thread_id=0, reply_to_id=0):
-    if not error:
-        topic_id = request.args.get('topic', 0)
-        thread_id = request.args.get('thread', 0)
-        reply_to_id = request.args.get('reply', 0)
+def post_get():
+    topic_id = request.args.get('topic', 0)
+    thread_id = request.args.get('thread', 0)
+    reply_to_id = request.args.get('reply', 0)
+    if not topic_id:
+        return render_template(
+            'error.html', response_code=HTTP_BAD_REQUEST,
+            message='Pyynnöstä puuttuu keskustelualue'
+        ), HTTP_NOT_FOUND
+
     if 'username' not in session:
-        return_url = f'post?topic={topic_id}&thread={thread_id}&reply={reply_to_id}'
+        return_url = f'post?topic={topic_id}'
+        if thread_id and thread_id != 0:
+            return_url += f'&thread={thread_id}&reply={reply_to_id}'
         return render_template('login.html', return_url=return_url)
 
-    topic_row = topics.get_topic(topic_id if topic_id else 0)
-    thread_row = messages.get_message(thread_id if thread_id else 0)
-    reply_row = messages.get_message(reply_to_id if reply_to_id else 0)
-    if error:
+    topic_row = topics.get_topic(topic_id)
+    thread_row = messages.get_message(thread_id)
+    reply_row = messages.get_message(reply_to_id)
+    topic_privileges = auth.has_privilege(topic_id, PRIVILEGE_WRITE)
+    if topic_privileges:
+        if thread_id:
+            return_url = f'thread/{thread_id}'
+        else:
+            return_url = f'topic/{topic_id}'
+        logout_return = return_url
+        if not auth.all_has_privilege(topic_privileges, PRIVILEGE_READ):
+            logout_return = 'topics'
         return render_template(
-            'post.html', error=error, return_url=return_url, topic=topic_row,
-            thread=thread_row, reply_to=reply_row
+            'post.html', return_url=return_url, topic=topic_row,
+            thread=thread_row, reply_to=reply_row, logout_return=logout_return
         )
-
-    return_url = ''
     if thread_id:
-        return_url = f'thread/{thread_id}'
-    else:
-        return_url = f'topic/{topic_id}'
+        return thread(
+            thread_id, 'Sinulla ei ole kirjoitusoikeutta alueella'
+        ), HTTP_FORBIDDEN
+    return topic(
+        topic_id, 'Sinulla ei ole kirjoitusoikeutta alueella'
+    ), HTTP_FORBIDDEN
+
+def post_get_with_error_msg(error, return_url, topic_id, thread_id, reply_to_id):
+    if 'username' not in session:
+        return_url = f'post?topic={topic_id}'
+        if thread_id and thread_id != 0:
+            return_url += f'&thread={thread_id}&reply={reply_to_id}'
+        return render_template('login.html', return_url=return_url)
+
+    topic_row = topics.get_topic(topic_id)
+    thread_row = messages.get_message(thread_id)
+    reply_row = messages.get_message(reply_to_id)
     return render_template(
-        'post.html', return_url=return_url, topic=topic_row,
+        'post.html', error=error, return_url=return_url, topic=topic_row,
         thread=thread_row, reply_to=reply_row
     )
 
@@ -116,7 +189,7 @@ def post_get(error=None, return_url='', topic_id=0, thread_id=0, reply_to_id=0):
 def post_post():
     csrf_token = request.form.get('csrf_token')
     if csrf_token != session['csrf_token']:
-        return post_get(
+        return post_get_with_error_msg(
             error='Toimenpide ei ole oikeutettu (puuttuva tunniste)!',
             return_url=request.form['return_url'],
             topic_id=request.form.get('topic_id', 0),
@@ -136,33 +209,43 @@ def post_post():
     if not error:
         messages.insert_message(message_data)
         return redirect(f'/{request.form["return_url"]}')
-    else:
-        return post_get(
-            error,
-            return_url=request.form['return_url'],
-            topic_id=request.form.get('topic_id', 0),
-            thread_id=request.form.get('thread_id', 0),
-            reply_to_id=request.form.get('refers_to', 0)
-        )
+    return post_get_with_error_msg(
+        error,
+        return_url=request.form['return_url'],
+        topic_id=request.form.get('topic_id', 0),
+        thread_id=request.form.get('thread_id', 0),
+        reply_to_id=request.form.get('refers_to', 0)
+    )
 
-@app.route('/admin', methods=['GET', 'POST'])
-def admin():
-    if request.method == 'GET':
-        if 'csrf_token' not in session:
-            session['csrf_token'] = secrets.token_hex(16)
-        return render_template('admin.html')
-    if request.method == 'POST':
-        csrf_token = request.form.get('csrf_token')
-        if csrf_token != session['csrf_token']:
-            return post_get('Toimenpide ei ole oikeutettu (puuttuva tunniste)!')
-        
-        topic_data = {
-            'topic': request.form['topic'],
-            'description': request.form['description']
-        }
-        topic_id, error = topics.insert_topic(topic_data)
-        if topic_id:
-            return redirect(f'/topic/{topic_id}')
-        else:
-            return render_template('admin.html', error=error)
-    
+@app.route('/admin', methods=['GET'])
+def admin_get():
+    if 'username' not in session:
+        return render_template('login.html', return_url='admin')
+
+    user_role = session.get('role')
+    if user_role != USER_ROLE__ADMIN and user_role != USER_ROLE__SUPER:
+        response_code = HTTP_FORBIDDEN
+        message = 'Vain ylläpitäjät ja pääkäyttäjät saavat käyttää hallintapaneelia'
+        return topic_list(message), response_code
+    return render_template('admin.html')
+
+@app.route('/admin', methods=['POST'])
+def admin_post():
+    csrf_token = request.form.get('csrf_token')
+    if csrf_token != session['csrf_token']:
+        error = 'Toimenpide ei ole oikeutettu (puuttuva tunniste)'
+        return render_template('admin.html', error=error), HTTP_FORBIDDEN
+
+    user_role = session.get('role')
+    if user_role != USER_ROLE__ADMIN and user_role != USER_ROLE__SUPER:
+        response_code = HTTP_FORBIDDEN
+        message = 'Vain ylläpitäjät ja pääkäyttäjät saavat käyttää hallintapaneelia'
+        return topic_list(message), response_code
+
+    topic_id, error, response_code = topics.insert_topic(
+        request.form['topic'],
+        request.form['description']
+    )
+    if error:
+        return render_template('admin.html', error=error), response_code
+    return redirect(f'/topic/{topic_id}')

@@ -3,19 +3,16 @@
 {% block admin_nav_class %} active{% endblock %}
 {% block content %}
     {% if alert %}
-      <div class="alert alert-{{ alert.class }}" role="alert">
+      <div class="alert alert-{{ alert.class }} text-center" role="alert">
         {{ alert }}
       </div>
     {% endif %}
     {% if error %}
-      <div class="alert alert-danger" role="alert">
+      <div class="alert alert-danger text-center" role="alert">
         {{ error }}
       </div>
     {% endif %}
       <h1>Hallinta</h1>
-      <div class="alert alert-info" role="alert">
-        <strong>HUOM!</strong> Tässä kehitysvaiheessa, kun käyttöoikeuksia ei vielä ole toteutettu, kaikki käyttäjät pääsevät hallintaan.
-      </div>
       <form action="/admin" method="POST">
         <h3>Keskustelualueiden lisääminen</h3>
         <div class="form-group">

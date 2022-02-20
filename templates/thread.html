@@ -1,8 +1,16 @@
 {% extends 'layout.html' %}
 {% block title %}{{ message_list[0].heading }}{% endblock %}
 {% block return_arg %}?return_url=thread/{{ message_list[0].thread_id }}{% endblock %}
+{% block logout_return %}?return_url={{ logout_return }}{% endblock %}
 {% block forum_nav_class %} active{% endblock %}
 {% block content %}
+      {% if error %}
+      <div class="text-center">
+        <div class="alert alert-danger" role="alert">
+          {{ error }}
+        </div>
+      </div>
+      {% endif %}
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
           <li class="breadcrumb-item">

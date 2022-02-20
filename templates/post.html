@@ -1,6 +1,7 @@
 {% extends 'layout.html' %}
 {% block title %}Uusi viesti{% endblock %}
 {% block return_arg %}?return_url={{ return_url }}{% endblock %}
+{% block logout_return %}?return_url={{ logout_return }}{% endblock %}
 {% block forum_nav_class %} active{% endblock %}
 {% block content %}
     {% if error %}

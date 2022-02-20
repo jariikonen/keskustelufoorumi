@@ -2,6 +2,13 @@
 {% block title %}Etusivu{% endblock %}
 {% block forum_nav_class %} active{% endblock %}
 {% block content %}
+      {% if error %}
+      <div class="text-center">
+        <div class="alert alert-danger" role="alert">
+          {{ error }}
+        </div>
+      </div>
+      {% endif %}
       <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
           <li class="breadcrumb-item active" aria-current="page">
@@ -12,27 +19,85 @@
       <h1>Keskustelufoorumi</h1>
       <p class="lead">Keskustelufoorumi on yksinkertainen Flask-pohjainen keskustelufoorumisovellus. Tältä sivulta löydät itse foorumin, eli käynnissä olevat keskustelut.</p>
       <p>Keskustelufoorumilla voit keskustella ylläpitäjien määrittämillä keskustelualueilla. Alla näet listauksen tämän hetkisistä keskustelualueista.</p>
-      <h2>Yleiset keskustelualueet</h2>
-      <p>Näitä keskusteluja kaikki voivat lukea ja kirjoittaa. Kirjoittaminen edellyttää rekisteröitymistä.</p>
-      <table class="table table-light">
-        <tr>
-          <th>Keskustelualue</th>
-          <th>Aiheita</th>
-          <th>Viestejä</th>
-          <th>Uusin viesti</th>
-        </tr>
-        {% for topic in topic_list %}
-        <tr>
-          <td>
-            <div class="list-item">
-              <div class="list-heading"><a href="/topic/{{ topic.id }}">{{ topic.topic }}</a></div>
-              <div class="list-description">{{ topic.description }}</div>
-            </div>
-          </td>
-          <td>{{ thread_nums[topic.id] }}</td>
-          <td>{{ message_nums[topic.id] }}</td>
-          <td>{{ latest_message_times[topic.id] }}</td>
-        </tr>
-        {% endfor %}
-      </table>
+      <div class="topic-list-section">
+        <h2 class="h4 font-weight-normal">Yleiset keskustelualueet</h2>
+        <p>Näitä keskusteluja kaikki voivat lukea ja kirjoittaa. Kirjoittaminen edellyttää rekisteröitymistä.</p>
+        <table class="table table-light">
+          <tr>
+            <th class="topic-list-description">Keskustelualue</th>
+            <th class="topic-list-numeric">Aiheita</th>
+            <th class="topic-list-numeric">Viestejä</th>
+            <th class="topic-list-timestamp">Uusin viesti</th>
+          </tr>
+          {% for topic in topic_list %}
+          {% if 3 in tpriv[topic.id] and tpriv[topic.id][3]['know'] and tpriv[topic.id][3]['read'] and tpriv[topic.id][3]['write'] %}
+          <tr>
+            <td class="topic-list-description">
+              <div class="list-item">
+                <div class="list-heading"><a href="/topic/{{ topic.id }}">{{ topic.topic }}</a></div>
+                <div class="list-description">{{ topic.description }}</div>
+              </div>
+            </td>
+            <td class="topic-list-numeric">{{ thread_nums[topic.id] }}</td>
+            <td class="topic-list-numeric">{{ message_nums[topic.id] }}</td>
+            <td class="topic-list-timestamp">{{ latest_message_times[topic.id] }}</td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+        </table>
+      </div>
+      <div class="topic-list-section">
+        <h2 class="h4 font-weight-normal">Rajoitetut keskustelualueet</h2>
+        <p>Nämä keskustelualueet ovat rajoitettuja ja vain alueeseen liitettyyn ryhmään kuuluvat voivat käyttää niitä ryhmälle annettujen käyttöoikeuksien mukaisesti.</p>
+        <table class="table table-light">
+          <tr>
+            <th class="topic-list-description">Keskustelualue</th>
+            <th class="topic-list-numeric">Aiheita</th>
+            <th class="topic-list-numeric">Viestejä</th>
+            <th class="topic-list-timestamp">Uusin viesti</th>
+          </tr>
+          {% for topic in topic_list %}
+          {% if 3 in tpriv[topic.id] and tpriv[topic.id][3]['know'] and (not tpriv[topic.id][3]['read'] or not tpriv[topic.id][3]['write']) %}
+          <tr>
+            <td class="topic-list-description">
+              <div class="list-item">
+                <div class="list-heading"><a href="/topic/{{ topic.id }}">{{ topic.topic }}</a></div>
+                <div class="list-description">{{ topic.description }}</div>
+              </div>
+            </td>
+            <td class="topic-list-numeric">{{ thread_nums[topic.id] }}</td>
+            <td class="topic-list-numeric">{{ message_nums[topic.id] }}</td>
+            <td class="topic-list-timestamp">{{ latest_message_times[topic.id] }}</td>
+          </tr>
+          {% endif %}
+          {% endfor %}
+        </table>
+      </div>
+      {% if secret_topics %}
+      <div class="topic-list-section">
+        <h2 class="h4 font-weight-normal">Salatut keskustelualueet</h2>
+        <p>Näille keskustelualueille pääset ryhmäjäsenyytesi tai roolisi perusteella ja ne näkyvät vain ryhmän jäsenille, ylläpitäjille ja pääkäyttäjille.</p>
+        <table class="table table-light">
+          <tr>
+            <th class="topic-list-description">Keskustelualue</th>
+            <th class="topic-list-numeric">Aiheita</th>
+            <th class="topic-list-numeric">Viestejä</th>
+            <th class="topic-list-timestamp">Uusin viesti</th>
+          </tr>
+          {%for topic in secret_topics %}
+          <tr>
+            <td class="topic-list-description">
+              <div class="list-item">
+                <div class="list-heading"><a href="/topic/{{ topic.id }}">{{ topic.topic }}</a></div>
+                <div class="list-description">{{ topic.description }}</div>
+              </div>
+            </td>
+            <td class="topic-list-numeric">{{ thread_nums[topic.id] }}</td>
+            <td class="topic-list-numeric">{{ message_nums[topic.id] }}</td>
+            <td class="topic-list-timestamp">{{ latest_message_times[topic.id] }}</td>
+          </tr>
+          {% endfor %}
+          {% endif %}
+        </table>
+      </div>
 {% endblock %}

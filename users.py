@@ -1,13 +1,8 @@
-import secrets
-from werkzeug.security import check_password_hash, generate_password_hash
-from flask import session
+from werkzeug.security import generate_password_hash
 from sqlalchemy.exc import IntegrityError
 from db import db
-
-def set_user_session(user_id, username):
-    session['user_id'] = user_id
-    session['username'] = username
-    session['csrf_token'] = secrets.token_hex(16)
+from constants import *
+import auth
 
 def validate_user_data(username, password1, password2):
     if username == '':
@@ -21,39 +16,27 @@ def register(username, password):
     if password != '':
         hash_value = generate_password_hash(password)
     sql = """
-        INSERT INTO users (username, password)
-        VALUES (:username, :password)
-        RETURNING id
+        INSERT INTO users (username, password, role_id)
+        VALUES (:username, :password, :role_id)
+        RETURNING id as user_id, role_id
     """
+    params = {
+        'username':username, 'password':hash_value,
+        'role_id': USER_ROLE__USER
+    }
     try:
-        result = db.session.execute(sql, {'username':username, 'password':hash_value})
-        user_id = result.fetchone()[0]
+        row = db.session.execute(sql, params).fetchone()
         db.session.commit()
-        set_user_session(user_id, username)
-        return True, ''
     except IntegrityError:
         return False, 'Käyttäjätunnus on jo käytössä!'
+    membership_tuple = get_user_memberships(row.user_id)
+    auth.set_user_session(row.user_id, username, row.role_id, membership_tuple)
+    return True, ''
 
-def login(username, password):
-    sql = 'SELECT id, password FROM users WHERE username=:username'
-    result = db.session.execute(sql, {'username':username})
-    user = result.fetchone()
-    if user and user.password and password:
-        if check_password_hash(user.password, password):
-            set_user_session(user.id, username)
-            return True
-        else:
-            return False
-    elif user and not user.password and password == '':
-        set_user_session(user.id, username)
-        return True
-    else:
-        return False
-
-def logout():
-    if 'user_id' in session:
-        del session['user_id']
-    if 'username' in session:
-        del session['username']
-    if 'csrf_token' in session:
-        del session['csrf_token']
+def get_user_memberships(user_id):
+    sql = 'SELECT group_id FROM group_memberships WHERE user_id=:user_id'
+    rows = db.session.execute(sql, {'user_id': user_id}).fetchall()
+    membership_list = [3]   # Every user is member of ALL (group_id 3)
+    for row in rows:
+        membership_list.append(row.group_id)
+    return tuple(membership_list)
