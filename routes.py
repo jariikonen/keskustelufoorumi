@@ -45,7 +45,7 @@ def topic(topic_id, error=None):
         message_nums = messages.get_num_of_messages(thread_list)
         latest_message_times = messages.get_time_of_latest_message(thread_list)
         logout_return = f'topic/{topic_id}'
-        if not auth.all_has_privilege(topic_privileges, PRIVILEGE_READ):
+        if not auth.all_has_privilege(topic_id, PRIVILEGE_READ, topic_privileges):
             logout_return = 'topics'
         return render_template(
             'topic.html', topic=topic_row, thread_list=thread_list,
@@ -79,17 +79,19 @@ def thread(thread_id, error=None):
             'Sinulla ei ole lukuoikeutta keskustelualueeseen!'
         ), HTTP_FORBIDDEN
     logout_return = f'thread/{thread_id}'
-    if not auth.all_has_privilege(topic_privileges, PRIVILEGE_READ):
+    if not auth.all_has_privilege(topic_id, PRIVILEGE_READ, topic_privileges):
         logout_return = 'topics'
     return render_template(
         'thread.html', message_list=message_list, logout_return=logout_return,
-        error=error
+        user_id=session.get('user_id'), error=error
     )
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'GET':
-        return render_template('register.html')
+        return render_template(
+            'register.html', return_url=request.args.get('return_url')
+        )
     if request.method == 'POST':
         username = request.form['username']
         password1 = request.form['password1']
@@ -99,7 +101,7 @@ def register():
             return render_template('register.html', error=error)
         success, error = users.register(username, password1)
         if success:
-            return redirect('/')
+            return redirect(f"/{request.form.get('return_url')}")
         else:
             return render_template('register.html', error=error)
 
@@ -156,7 +158,7 @@ def post_get():
         else:
             return_url = f'topic/{topic_id}'
         logout_return = return_url
-        if not auth.all_has_privilege(topic_privileges, PRIVILEGE_READ):
+        if not auth.all_has_privilege(topic_id, PRIVILEGE_READ, topic_privileges):
             logout_return = 'topics'
         return render_template(
             'post.html', return_url=return_url, topic=topic_row,
@@ -216,6 +218,49 @@ def post_post():
         thread_id=request.form.get('thread_id', 0),
         reply_to_id=request.form.get('refers_to', 0)
     )
+
+@app.route('/edit/message/<int:message_id>', methods=['GET'])
+def edit_message_get(message_id):
+    # ONKO KETJU JÄÄDYTETTY?
+
+    message_row = messages.get_message(message_id)
+    user_id = session.get('user_id')
+    if user_id != message_row.writer_id:
+        return thread(
+            message_row.thread_id,
+            'Et voi muokata viestiä, jota et ole kirjoittanut'
+        ), HTTP_FORBIDDEN
+
+    referred_row = None
+    if message_row.refers_to:
+        referred_row = messages.get_message(message_row.refers_to)
+
+    logout_return = f'thread/{message_row.thread_id}'
+    if not auth.all_has_privilege(message_row.topic_id, PRIVILEGE_READ):
+        logout_return = 'topics'
+    return render_template(
+        'edit.html', message=message_row, user_id=user_id,
+        referred=referred_row, logout_return=logout_return
+    )
+
+@app.route('/edit/message/<int:message_id>', methods=['POST'])
+def edit_message_post(message_id):
+    # ONKO KETJU JÄÄDYTETTY?
+
+    writer_row = messages.get_writer_id(message_id)
+    user_id = session.get('user_id')
+    if user_id != writer_row.writer_id:
+        return render_template(
+            'error.html', response_code=HTTP_FORBIDDEN,
+            message='Et voi muokata viestiä, jota et ole kirjoittanut'
+        ), HTTP_FORBIDDEN
+    message_data = {
+        'id': message_id,
+        'heading': request.form['heading'],
+        'content': request.form['content']
+    }
+    messages.update_message(message_data)
+    return redirect(f'/thread/{writer_row.thread_id}')
 
 @app.route('/admin', methods=['GET'])
 def admin_get():

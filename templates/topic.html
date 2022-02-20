@@ -1,7 +1,6 @@
 {% extends 'layout.html' %}
 {% block title %}{{ topic.topic }}{% endblock %}
-{% block return_arg %}?return_url=topic/{{ topic.id }}{% endblock %}
-{% block logout_return %}?return_url={{ logout_return }}{% endblock %}
+{% block return_arg %}?return_url={{ logout_return }}{% endblock %}
 {% block forum_nav_class %} active{% endblock %}
 {% block content %}
 {% if error %}

@@ -45,45 +45,26 @@ def get_messages(thread_id):
             AND topics.id=messages.topic_id
             AND thread.id=messages.thread_id
             AND users.id=messages.writer_id
+        ORDER BY sent_at
     """
     result = db.session.execute(sql, {'id': thread_id})
     return result.fetchall()
 
-def get_writers(message_list):
-    writer_dict = {}
-    for message in message_list:
-        result = db.session.execute(
-            'SELECT username FROM users WHERE id=:id',
-            {'id': message.writer_id}
-        )
-        writer_dict[message.id] = result.fetchone()[0]
-    return writer_dict
-
 def get_message(message_id):
     sql = """
-        SELECT messages.*, users.username as writer
-        FROM messages, users
+        SELECT messages.*, users.username as writer, topics.topic as topic,
+            thread.heading as thread
+        FROM messages, users, topics, messages as thread
         WHERE messages.id=:id
             AND users.id=messages.writer_id
-    """
-    result = db.session.execute(sql,{'id': message_id})
-    return result.fetchone()
-
-def get_message_full(message_id):
-    sql = """
-        SELECT messages.*, topics.topic, thread.heading as thread,
-            users.username as writer, referred.heading as referred,
-            referred.writer_id as referred_writer_id,
-            referred.sent_at as referred_sent_at,
-            referred_writer.username as referred_writer_username
-        FROM messages, topics, messages as thread, messages as referred, users,
-            users as referred_writer
-        WHERE messages.id=:id
             AND topics.id=messages.topic_id
             AND thread.id=messages.thread_id
-            AND referred.id=messages.refers_to
-            AND users.id=messages.writer_id
     """
+    result = db.session.execute(sql, {'id': message_id})
+    return result.fetchone()
+
+def get_writer_id(message_id):
+    sql = 'SELECT writer_id, thread_id FROM messages WHERE messages.id=:id'
     result = db.session.execute(sql, {'id': message_id})
     return result.fetchone()
 
@@ -106,8 +87,12 @@ def update_thread_id(message_id, thread_id):
 
 def insert_message(message_dict):
     sql = """
-        INSERT INTO messages (topic_id, refers_to, thread_id, writer_id, heading, content)
-        VALUES (:topic_id, :refers_to, :thread_id, :writer_id, :heading, :content)
+        INSERT INTO messages (
+            topic_id, refers_to, thread_id, writer_id, heading, content
+        )
+        VALUES (
+            :topic_id, :refers_to, :thread_id, :writer_id, :heading, :content
+        )
         RETURNING id
     """
     message_dict = variables.set_empty_to_none(message_dict)
@@ -119,4 +104,10 @@ def insert_message(message_dict):
         else:
             update_thread_id(message_id, message_id)
     db.session.commit()
-    
+
+def update_message(message_dict):
+    sql = """
+        UPDATE messages SET heading=:heading, content=:content WHERE id=:id
+    """
+    db.session.execute(sql, message_dict)
+    db.session.commit()

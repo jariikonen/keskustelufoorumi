@@ -22,7 +22,7 @@
         </li>
         {% if session.username %}
         <li class="nav-item">
-          <a class="nav-link" href="/logout{% block logout_return %}{% endblock %}">Kirjaa ulos: <span class="username">{{ session.username }}</span></a>
+          <a class="nav-link" href="/logout{{ return_arg() }}">Kirjaa ulos: <span class="username">{{ session.username }}</span></a>
         </li>
         {% else %}
         <li class="nav-item{% block login_nav_class %}{% endblock %}">

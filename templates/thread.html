@@ -1,7 +1,6 @@
 {% extends 'layout.html' %}
 {% block title %}{{ message_list[0].heading }}{% endblock %}
-{% block return_arg %}?return_url=thread/{{ message_list[0].thread_id }}{% endblock %}
-{% block logout_return %}?return_url={{ logout_return }}{% endblock %}
+{% block return_arg %}?return_url={{ logout_return }}{% endblock %}
 {% block forum_nav_class %} active{% endblock %}
 {% block content %}
       {% if error %}
@@ -28,8 +27,12 @@
         <h1>{{ message_list[0].heading }}</h1>
         <div class="thread-meta">Aloittanut <a href="#">{{ message_list[0].writer }}</a>, {{ message_list[0].sent_at.strftime('%d.%m.%Y klo %H:%M') }}</div>
         <div class="first-message"><span class="lead">{{ message_list[0].content[0:100] }} ...</span> <a href="#">Näytä koko viesti</a></div>
-        <div class="buttons">
-          <a class="btn btn-primary" href="{{ url_for('post_get', topic=message_list[0].topic_id, thread=message_list[0].thread_id) }}" role="button">Uusi viesti ketjuun</a>
+        <div class="buttons d-inline-flex">
+          <a class="btn btn-primary mr-sm-2" href="{{ url_for('post_get', topic=message_list[0].topic_id, thread=message_list[0].thread_id) }}" role="button">Uusi viesti ketjuun</a>
+          {% if user_id == message_list[0].writer_id %}
+          <a class="btn btn-warning mr-sm-2" href="/edit/message/{{ message_list[0].id }}">Muokkaa aloitusviestiä</a>
+          <a class="btn btn-danger mr-sm-2" href="/delete/message/{{ message_list[0].id }}">Poista aloitusviesti</a>
+          {% endif %}
         </div>
       </div>
       <div class="container message-list">
@@ -40,7 +43,13 @@
             <div class="message-meta">{{ message.sent_at.strftime('%d.%m.%Y klo %H:%M') }}, <a href="#">{{ message.writer }}</a></div>
           </div>
           <div class="message-content">{{ message.content }}</div>
-          <div class="message-footer"><a class="btn btn-link" href="{{ url_for('post_get', topic=message.topic_id, thread=message.thread_id, reply=message.id) }}">Vastaa</a></div>
+          <div class="message-footer d-inline-flex">
+            <a class="btn btn-outline-primary mr-sm-2" href="{{ url_for('post_get', topic=message.topic_id, thread=message.thread_id, reply=message.id) }}">Vastaa</a>
+            {% if user_id == message.writer_id %}
+            <a class="btn btn-warning mr-sm-2" href="/edit/message/{{ message.id }}">Muokkaa</a>
+            <a class="btn btn-danger" href="/delete/message/{{ message.id }}">Poista</a>
+            {% endif %}
+          </div>
         </div>
       {% endfor %}
       </div>

@@ -53,7 +53,9 @@ def has_privilege(topic_id, privilege):
                 return topic_privileges
     return False
 
-def all_has_privilege(topic_privileges, privilege):
+def all_has_privilege(topic_id, privilege, topic_privileges=None):
+    if not topic_privileges:
+        topic_privileges = topics.get_topic_privileges(topic_id)[int(topic_id)]
     if GROUP_ID__ALL in topic_privileges.keys():
         if topic_privileges[GROUP_ID__ALL][privilege]:
             return True

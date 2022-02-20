@@ -3,3 +3,4 @@ def set_empty_to_none(variable_dict):
         if variable_dict[key] == '':
             variable_dict[key] = None
     return variable_dict
+    

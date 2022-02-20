@@ -1,7 +1,6 @@
 {% extends 'layout.html' %}
 {% block title %}Uusi viesti{% endblock %}
-{% block return_arg %}?return_url={{ return_url }}{% endblock %}
-{% block logout_return %}?return_url={{ logout_return }}{% endblock %}
+{% block return_arg %}?return_url={{ logout_return }}{% endblock %}
 {% block forum_nav_class %} active{% endblock %}
 {% block content %}
     {% if error %}
@@ -31,11 +30,11 @@
       <h1>Uusi viesti</h1>
         {% if reply_to %}
       <div class="post-meta">
-        Vastauksena viestiin "{{ reply_to.heading }}", {{ reply_to.sent_at.strftime('%d.%m.%Y klo %H:%M') }}, {{ reply_to.writer }}</li>
+        Vastauksena viestiin "{{ reply_to.heading }}", {{ reply_to.sent_at.strftime('%d.%m.%Y klo %H:%M') }}, {{ reply_to.writer }}
       </div>
         {% else %}
       <div class="post-meta">
-        Vastauksena ketjuun "{{ thread.heading }}", {{ thread.sent_at.strftime('%d.%m.%Y klo %H:%M') }}, {{ thread.writer }}</li>
+        Vastauksena ketjuun "{{ thread.heading }}", {{ thread.sent_at.strftime('%d.%m.%Y klo %H:%M') }}, {{ thread.writer }}
       </div>
         {% endif %}
     {% else %}
@@ -60,6 +59,9 @@
         <input type="hidden" name="thread_id" value="{{ thread.id }}">
         <input type="hidden" name="return_url" value="{{ return_url }}">
         <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
-        <button class="btn btn-lg btn-primary mb-2" type="submit">Lähetä</button>
+        <div class="d-inline-flex">
+          <button class="btn btn-primary mr-2" type="submit">Lähetä</button>
+          <a class="btn btn-warning mr-sm-2" href="{{ return_url }}">Peru</a>
+        </div>
       </form>
 {% endblock %}
