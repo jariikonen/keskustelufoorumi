@@ -6,7 +6,7 @@ import variables
 def get_message_threads(topic_id):
     sql = """
         SELECT M.id, M.topic_id, M.refers_to, M.writer_id, M.heading,
-            SUBSTRING(M.content from 0 for 50), M.sent_at,
+            SUBSTRING(M.content from 0 for 50) AS sample, M.sent_at,
             COUNT(D.message_id) AS deleted
         FROM messages M LEFT JOIN pending_message_deletions D
             ON D.message_id=M.id
@@ -63,24 +63,29 @@ def get_messages(thread_id):
 
 def get_message(message_id):
     sql = """
-        SELECT messages.id, messages.topic_id, messages.refers_to,
-            messages.thread_id, messages.writer_id, messages.heading,
-            messages.content, messages.sent_at, users.username as writer,
-            topics.topic as topic, thread.heading as thread
-        FROM messages, users, topics, messages as thread
-        WHERE messages.id=:id
-            AND users.id=messages.writer_id
-            AND topics.id=messages.topic_id
-            AND thread.id=messages.thread_id
+        SELECT M.id, M.topic_id, M.refers_to, M.thread_id, M.writer_id,
+            M.heading, M.content, M.sent_at, U.username AS writer,
+            T.topic as topic, THREAD.heading AS thread,
+            COUNT(D.message_id) AS deleted
+        FROM messages M LEFT JOIN pending_message_deletions D
+            ON M.id=D.message_id, topics T, messages as THREAD, users U
+        WHERE M.id=:id
+            AND U.id=M.writer_id
+            AND T.id=M.topic_id
+            AND THREAD.id=M.thread_id
+        GROUP BY M.id, T.id, thread, U.username
     """
     result = db.session.execute(sql, {'id': message_id})
     return result.fetchone()
 
 def get_message_concise(message_id):
     sql = """
-        SELECT id, topic_id, refers_to, thread_id, writer_id, heading,
-            content, sent_at
-        FROM messages WHERE id=:id
+        SELECT M.id, M.topic_id, M.refers_to, M.thread_id, M.writer_id,
+            M.heading, M.content, M.sent_at, COUNT(D.message_id) AS deleted
+        FROM messages M LEFT JOIN pending_message_deletions D
+            ON M.id=D.message_id
+        WHERE M.id=:id
+        GROUP BY M.id
     """
     result = db.session.execute(sql, {'id': message_id})
     return result.fetchone()

@@ -30,16 +30,28 @@
           <th>Uusin viesti</th>
         </tr>
         {% for thread in thread_list %}
+        {% if thread.deleted %}
         <tr>
           <td>
             <div class="list-item">
-              <div class="list-heading"><a href="/thread/{{ thread.id }}">{{ thread.heading }}</a></div>
-              <div class="list-description">{{ thread[5] }}...</div>
+              <div class="list-heading"><a href="/thread/{{ thread.id }}">Tämä viesti on poistettu</a></div>
             </div>
           </td>
           <td>{{ message_nums[thread.id] }}</td>
           <td>{{ latest_message_times[thread.id] }}</td>
         </tr>
+        {% else %}
+        <tr>
+          <td>
+            <div class="list-item">
+              <div class="list-heading"><a href="/thread/{{ thread.id }}">{{ thread.heading }}</a></div>
+              <div class="list-description">{{ thread.sample }}...</div>
+            </div>
+          </td>
+          <td>{{ message_nums[thread.id] }}</td>
+          <td>{{ latest_message_times[thread.id] }}</td>
+        </tr>
+        {% endif %}
         {% endfor %}
       </table>
 {% endblock %}
