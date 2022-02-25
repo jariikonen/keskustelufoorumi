@@ -1,3 +1,4 @@
+from urllib import response
 from app import app
 from flask import redirect, render_template, request, session
 from constants import *
@@ -66,6 +67,8 @@ def thread(thread_id, error=None):
         return redirect('/topics')
 
     message_list = messages.get_messages(thread_id)
+    for message in message_list:
+        print('THREAD:', message['heading'], message['deleted'])
     if len(message_list) == 0:
         return render_template(
             'error.html', reponse_code=HTTP_NOT_FOUND,
@@ -219,8 +222,6 @@ def post_post():
 
 @app.route('/edit/message/<int:message_id>', methods=['GET'])
 def edit_message_get(message_id):
-    # ONKO KETJU JÄÄDYTETTY?
-
     message_row = messages.get_message(message_id)
     user_id = session.get('user_id')
     if user_id != message_row.writer_id:
@@ -243,11 +244,9 @@ def edit_message_get(message_id):
 
 @app.route('/edit/message/<int:message_id>', methods=['POST'])
 def edit_message_post(message_id):
-    # ONKO KETJU JÄÄDYTETTY?
-
-    writer_row = messages.get_writer_id(message_id)
+    message_row = messages.get_message_concise(message_id)
     user_id = session.get('user_id')
-    if user_id != writer_row.writer_id:
+    if user_id != message_row.writer_id:
         return render_template(
             'error.html', response_code=HTTP_FORBIDDEN,
             message='Et voi muokata viestiä, jota et ole kirjoittanut'
@@ -258,7 +257,45 @@ def edit_message_post(message_id):
         'content': request.form['content']
     }
     messages.update_message(message_data)
-    return redirect(f'/thread/{writer_row.thread_id}')
+    return redirect(f'/thread/{message_row.thread_id}')
+
+@app.route('/delete/message/<int:message_id>', methods=['GET'])
+def delete_message_get(message_id):
+    message_row = messages.get_message_concise(message_id)
+    user_id = session.get('user_id')
+    user_role = session.get('role')
+    if user_id != message_row.writer_id and user_role != USER_ROLE__ADMIN\
+            and user_role != USER_ROLE__SUPER:
+        return thread(
+            message_row.thread_id,
+            'Et voi poistaa viestiä, jota et ole kirjoittanut'
+        ), HTTP_FORBIDDEN
+
+    return render_template(
+        'confirmation.html', message=message_row
+    )
+
+@app.route('/delete/message/<int:message_id>', methods=['POST'])
+def delete_message_post(message_id):
+    message_row = messages.get_message_concise(message_id)
+    user_id = session.get('user_id')
+    user_role = session.get('role')
+    if user_id != message_row.writer_id and user_role != USER_ROLE__ADMIN\
+            and user_role != USER_ROLE__SUPER:
+        return thread(
+            message_row.thread_id,
+            'Et voi poistaa viestiä, jota et ole kirjoittanut'
+        ), HTTP_FORBIDDEN
+
+    error_dict = messages.delete_message(message_row, user_id, user_role)
+    if not error_dict:
+        if message_row.id == message_row.thread_id:
+            return redirect(f'/topic/{message_row.topic_id}')
+        return redirect(f'/thread/{message_row.thread_id}')
+    return render_template(
+        'error.html', message=error_dict['message'],
+        response_code=error_dict['response_code']
+    ), error_dict['response_code']
 
 @app.route('/admin', methods=['GET'])
 def admin_get():

@@ -31,9 +31,50 @@ th.topic-list-numeric {
   text-align: center;
 }
 
-.thread-header {
+#thread-header {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
+}
+
+#first-message-links button, #first-message-links a {
+  padding: 0;
+  margin-top: 0.3rem;
+  margin-bottom: 1rem;
+  margin-right: 1rem;
+  outline: none;
+  border: none;
+}
+
+#first-message-container button:hover {
+  text-decoration: underline;
+}
+
+#first-message-container button:not(.collapsed):hover {
+  text-decoration: underline;
+}
+
+#first-message-container button:focus {
+  outline: none;
+  box-shadow: none;
+  text-decoration: none;
+}
+
+#first-message-container button.collapsed:after {
+  content: 'Näytä koko viesti';
+}
+
+#first-message-container button:not(.collapsed):after {
+  content: 'Näytä vähemmän';
+}
+
+#first-message-content.collapse:not(.show) {
+  display: block;
+  height: 2.5rem;
+  overflow: hidden;
+}
+
+#first-message-content.collapsing {
+  height: 2.5rem;
 }
 
 .thread-meta {

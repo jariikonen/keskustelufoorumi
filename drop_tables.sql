@@ -1,3 +1,4 @@
+DROP TABLE message_deletions;
 DROP TABLE messages;
 DROP TABLE topic_privileges;
 DROP TABLE group_memberships;

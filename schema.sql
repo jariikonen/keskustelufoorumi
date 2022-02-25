@@ -27,7 +27,8 @@ CREATE TABLE messages (
     writer_id INTEGER REFERENCES users,
     heading TEXT,
     content TEXT,
-    sent_at TIMESTAMP DEFAULT NOW()
+    sent_at TIMESTAMP DEFAULT NOW(),
+    last_update TIMESTAMP DEFAULT NULL
 );
 
 CREATE TABLE groups (
@@ -52,6 +53,12 @@ CREATE TABLE topic_privileges (
     write_priv BOOLEAN DEFAULT false,
     created_at TIMESTAMP DEFAULT NOW(),
     UNIQUE (group_id, topic_id)
+);
+
+CREATE TABLE pending_message_deletions (
+    message_id INTEGER REFERENCES messages UNIQUE PRIMARY KEY,
+    deleted_by INTEGER REFERENCES users,
+    deleted_at TIMESTAMP DEFAULT NOW()
 );
 
 INSERT INTO roles (role) VALUES ('super');

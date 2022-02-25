@@ -1,4 +1,14 @@
 {% extends 'layout.html' %}
+{% macro line_breaks( text ) -%}
+{% if text %}
+{% for line in text.split('\n') %}
+{{ line }}
+<br />
+{% endfor %}
+{% else %}
+{{ text }}
+{% endif %}
+{%- endmacro %}
 {% block title %}{{ message_list[0].heading }}{% endblock %}
 {% block return_arg %}?return_url={{ logout_return }}{% endblock %}
 {% block forum_nav_class %} active{% endblock %}
@@ -19,14 +29,31 @@
             <a href="/topic/{{ message_list[0].topic_id }}">{{ message_list[0].topic }}</a>
           </li>
           <li class="breadcrumb-item active" aria-current="page">
-            {{ message_list[0].thread }}
+            {% if message_list[0].deleted %}Tämä viesti on poistettu{% else %}{{ message_list[0].thread }}{% endif %}
           </li>
         </ol>
       </nav>
-      <div class="thread-header">
+      {% if message_list[0].deleted %}
+      <div id="thread-header">
+        <h1>Tämä viesti on poistettu</h1>
+        <div class="buttons d-inline-flex">
+          <a class="btn btn-primary mr-sm-2" href="{{ url_for('post_get', topic=message_list[0].topic_id, thread=message_list[0].thread_id) }}" role="button">Uusi viesti ketjuun</a>
+          {% if user_id == message_list[0].writer_id %}
+          <a class="btn btn-warning mr-sm-2" href="/restore/message/{{ message_list[0].id }}">Palauta aloitusviesti</a>
+          {% endif %}
+        </div>
+      </div>
+      {% else %}
+      <div id="thread-header">
         <h1>{{ message_list[0].heading }}</h1>
         <div class="thread-meta">Aloittanut <a href="#">{{ message_list[0].writer }}</a>, {{ message_list[0].sent_at.strftime('%d.%m.%Y klo %H:%M') }}</div>
-        <div class="first-message"><span class="lead">{{ message_list[0].content[0:100] }} ...</span> <a href="#">Näytä koko viesti</a></div>
+        <div id="first-message-container">
+          <div id="first-message-content" class="first-message collapse lead" aria-expanded="false" aria-controls="first-message-content">{{ line_breaks(message_list[0].content) }}</div>
+          <div id="first-message-links" class="buttons d-inline-flex">
+            <button type="button" data-target="#first-message-content" class="collapsed btn btn-link" data-toggle="collapse" aria-expanded="false" aria-controls="first-message-content"></button>
+            <a href="#message-{{ message_list[0].id }}">Siirry viestiin</a>
+          </div>
+        </div>
         <div class="buttons d-inline-flex">
           <a class="btn btn-primary mr-sm-2" href="{{ url_for('post_get', topic=message_list[0].topic_id, thread=message_list[0].thread_id) }}" role="button">Uusi viesti ketjuun</a>
           {% if user_id == message_list[0].writer_id %}
@@ -35,14 +62,27 @@
           {% endif %}
         </div>
       </div>
+      {% endif %}
       <div class="container message-list">
       {% for message in message_list %}
-        <div class="message-item">
+        {% if message.deleted %}
+        <div id="message-{{ message.id }}" class="message-item">
+          <div class="message-header rounded-top">
+            <div class="message-heading">Tämä viesti on poistettu</div>
+          </div>
+          <div class="message-footer d-inline-flex">
+            {% if user_id == message.writer_id %}
+            <a class="btn btn-warning mr-sm-2" href="/restore/message/{{ message.id }}">Palauta</a>
+            {% endif %}
+          </div>
+        </div>
+        {% else %}
+        <div id="message-{{ message.id }}" class="message-item">
           <div class="message-header rounded-top">
             <div class="message-heading">{{ message.heading }}</div>
             <div class="message-meta">{{ message.sent_at.strftime('%d.%m.%Y klo %H:%M') }}, <a href="#">{{ message.writer }}</a></div>
           </div>
-          <div class="message-content">{{ message.content }}</div>
+          <div class="message-content">{{ line_breaks(message.content) }}</div>
           <div class="message-footer d-inline-flex">
             <a class="btn btn-outline-primary mr-sm-2" href="{{ url_for('post_get', topic=message.topic_id, thread=message.thread_id, reply=message.id) }}">Vastaa</a>
             {% if user_id == message.writer_id %}
@@ -51,6 +91,7 @@
             {% endif %}
           </div>
         </div>
+        {% endif %}
       {% endfor %}
       </div>
 {% endblock %}

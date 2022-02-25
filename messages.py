@@ -1,12 +1,18 @@
+from sqlalchemy.exc import IntegrityError
 from db import db
+from constants import *
 import variables
 
 def get_message_threads(topic_id):
     sql = """
-        SELECT id, topic_id, refers_to, writer_id, heading,
-            substring(content from 0 for 50), sent_at
-        FROM messages
-        WHERE topic_id=:topic_id AND refers_to IS NULL
+        SELECT M.id, M.topic_id, M.refers_to, M.writer_id, M.heading,
+            SUBSTRING(M.content from 0 for 50), M.sent_at,
+            COUNT(D.message_id) AS deleted
+        FROM messages M LEFT JOIN pending_message_deletions D
+            ON D.message_id=M.id
+        WHERE M.topic_id=:topic_id AND M.refers_to IS NULL
+        GROUP BY M.id
+        ORDER BY M.id ASC
     """
     result = db.session.execute(sql, {'topic_id': topic_id})
     return result.fetchall()
@@ -31,29 +37,36 @@ def get_time_of_latest_message(threads):
         latest_message_times[thread.id] = result.fetchone()[0]
         if latest_message_times[thread.id]:
             latest_message_times[thread.id]\
-                = latest_message_times[thread.id].strftime('%d.%m.%Y klo %H:%M')
+                = latest_message_times[thread.id].strftime(
+                    '%d.%m.%Y klo %H:%M'
+                )
         else:
             latest_message_times[thread.id] = '-'
     return latest_message_times
 
 def get_messages(thread_id):
     sql = """
-        SELECT messages.*, topics.topic, thread.heading as thread,
-            users.username as writer
-        FROM messages, topics, messages as thread, users
-        WHERE messages.thread_id=:id
-            AND topics.id=messages.topic_id
-            AND thread.id=messages.thread_id
-            AND users.id=messages.writer_id
-        ORDER BY sent_at
+        SELECT M.id, M.topic_id, M.refers_to, M.thread_id, M.writer_id,
+            M.heading, M.content, M.sent_at, T.topic, THREAD.heading as thread,
+            U.username as writer, COUNT(D.message_id) as deleted
+        FROM messages M LEFT JOIN pending_message_deletions D
+            ON M.id=D.message_id, topics T, messages THREAD, users U
+        WHERE M.thread_id=:id
+            AND T.id=M.topic_id
+            AND THREAD.id=M.thread_id
+            AND U.id=M.writer_id
+        GROUP BY M.id, T.id, thread, U.username
+        ORDER BY M.sent_at
     """
     result = db.session.execute(sql, {'id': thread_id})
     return result.fetchall()
 
 def get_message(message_id):
     sql = """
-        SELECT messages.*, users.username as writer, topics.topic as topic,
-            thread.heading as thread
+        SELECT messages.id, messages.topic_id, messages.refers_to,
+            messages.thread_id, messages.writer_id, messages.heading,
+            messages.content, messages.sent_at, users.username as writer,
+            topics.topic as topic, thread.heading as thread
         FROM messages, users, topics, messages as thread
         WHERE messages.id=:id
             AND users.id=messages.writer_id
@@ -63,8 +76,12 @@ def get_message(message_id):
     result = db.session.execute(sql, {'id': message_id})
     return result.fetchone()
 
-def get_writer_id(message_id):
-    sql = 'SELECT writer_id, thread_id FROM messages WHERE messages.id=:id'
+def get_message_concise(message_id):
+    sql = """
+        SELECT id, topic_id, refers_to, thread_id, writer_id, heading,
+            content, sent_at
+        FROM messages WHERE id=:id
+    """
     result = db.session.execute(sql, {'id': message_id})
     return result.fetchone()
 
@@ -111,3 +128,48 @@ def update_message(message_dict):
     """
     db.session.execute(sql, message_dict)
     db.session.commit()
+
+def clear_message_content(message_id):
+    sql = 'UPDATE messages SET heading=NULL, content=NULL WHERE id=:id'
+    db.session.execute(sql, {'id': message_id})
+
+def create_pending_delete(message_row, user_id):
+    sql = """
+        INSERT INTO pending_message_deletions (message_id, deleted_by)
+        VALUES (:message_id, :user_id)
+    """
+    try:
+        db.session.execute(
+            'INSERT INTO pending_message_deletions (message_id, deleted_by) VALUES (:message_id, :user_id)',
+            {'message_id': message_row.id, 'user_id': user_id}
+        )
+    except IntegrityError:
+        return {
+            'message': 'Viesti on jo poistettu',
+            'response_code': HTTP_NOT_FOUND
+        }
+
+    if user_id == message_row.writer_id:
+        clear_message_content(message_row.id)
+
+    db.session.commit()
+
+def delete_message(message_row, user_id, user_role):
+    if user_id != message_row.writer_id:
+        return create_pending_delete(message_row, user_id)
+
+    sql = 'DELETE FROM messages WHERE id=:message_id'
+    try:
+        db.session.execute(sql, {'message_id': message_row.id})
+    except IntegrityError:
+        db.session.rollback()
+        return create_pending_delete(message_row, user_id)
+    db.session.commit()
+
+def delete_thread(message_row, user_id, user_role, force):
+    if user_id == message_row.writer_id\
+            or (user_role == USER_ROLE__SUPER and force):
+        db.session.execute(
+            'DELETE FROM messages WHERE thread_id=:thread_id',
+            {'thread_id': message_row.thread_id}
+        )
