@@ -18,7 +18,7 @@ def topic_root():
 @app.route('/topics')
 def topic_list(error=None):
     user_memberships = session.get('memberships', (3,))
-    user_role = session.get('role')
+    user_role = session.get('user_role')
     topic_list = topics.get_topics()
     topic_privileges = topics.get_all_topic_privileges()
     secret_topics = topics.get_secret_topics(
@@ -262,13 +262,19 @@ def edit_message_post(message_id):
 @app.route('/delete/message/<int:message_id>', methods=['GET'])
 def delete_message_get(message_id):
     message_row = messages.get_message_concise(message_id)
+    if not message_row:
+        return render_template(
+            'error.html', response_code=HTTP_NOT_FOUND,
+            message='Viestiä ei löytynyt'
+        ), HTTP_NOT_FOUND
+
     user_id = session.get('user_id')
-    user_role = session.get('role')
+    user_role = session.get('user_role')
     if user_id != message_row.writer_id and user_role != USER_ROLE__ADMIN\
             and user_role != USER_ROLE__SUPER:
-        return thread(
-            message_row.thread_id,
-            'Et voi poistaa viestiä, jota et ole kirjoittanut'
+        return render_template(
+            'error.html', response_code=HTTP_FORBIDDEN,
+            message='Et voi poistaa viestiä, jota et ole kirjoittanut'
         ), HTTP_FORBIDDEN
 
     return render_template(
@@ -278,13 +284,20 @@ def delete_message_get(message_id):
 @app.route('/delete/message/<int:message_id>', methods=['POST'])
 def delete_message_post(message_id):
     message_row = messages.get_message_concise(message_id)
+    message_row = messages.get_message_concise(message_id)
+    if not message_row:
+        return render_template(
+            'error.html', response_code=HTTP_NOT_FOUND,
+            message='Viestiä ei löytynyt'
+        ), HTTP_NOT_FOUND
+
     user_id = session.get('user_id')
-    user_role = session.get('role')
+    user_role = session.get('user_role')
     if user_id != message_row.writer_id and user_role != USER_ROLE__ADMIN\
             and user_role != USER_ROLE__SUPER:
-        return thread(
-            message_row.thread_id,
-            'Et voi poistaa viestiä, jota et ole kirjoittanut'
+        return render_template(
+            'error.html', response_code=HTTP_FORBIDDEN,
+            message='Et voi poistaa viestiä, jota et ole kirjoittanut'
         ), HTTP_FORBIDDEN
 
     error_dict = messages.delete_message(message_row, user_id, user_role)
@@ -302,7 +315,7 @@ def admin_get():
     if 'username' not in session:
         return render_template('login.html', return_url='admin')
 
-    user_role = session.get('role')
+    user_role = session.get('user_role')
     if user_role != USER_ROLE__ADMIN and user_role != USER_ROLE__SUPER:
         response_code = HTTP_FORBIDDEN
         message = 'Vain ylläpitäjät ja pääkäyttäjät saavat käyttää hallintapaneelia'
@@ -316,7 +329,7 @@ def admin_post():
         error = 'Toimenpide ei ole oikeutettu (puuttuva tunniste)'
         return render_template('admin.html', error=error), HTTP_FORBIDDEN
 
-    user_role = session.get('role')
+    user_role = session.get('user_role')
     if user_role != USER_ROLE__ADMIN and user_role != USER_ROLE__SUPER:
         response_code = HTTP_FORBIDDEN
         message = 'Vain ylläpitäjät ja pääkäyttäjät saavat käyttää hallintapaneelia'

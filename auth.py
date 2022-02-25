@@ -6,10 +6,10 @@ from constants import *
 import users
 import topics
 
-def set_user_session(user_id, username, role, membership_tuple):
+def set_user_session(user_id, username, user_role, membership_tuple):
     session['user_id'] = user_id
     session['username'] = username
-    session['role'] = role
+    session['user_role'] = user_role
     session['memberships'] = membership_tuple
     session['csrf_token'] = secrets.token_hex(16)
     print('SET_USER_SESSION: ', session)
