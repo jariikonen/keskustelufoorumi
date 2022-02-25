@@ -284,7 +284,6 @@ def delete_message_get(message_id):
 @app.route('/delete/message/<int:message_id>', methods=['POST'])
 def delete_message_post(message_id):
     message_row = messages.get_message_concise(message_id)
-    message_row = messages.get_message_concise(message_id)
     if not message_row:
         return render_template(
             'error.html', response_code=HTTP_NOT_FOUND,

@@ -34,8 +34,8 @@ def logout():
         del session['user_id']
     if 'username' in session:
         del session['username']
-    if 'role' in session:
-        del session['role']
+    if 'user_role' in session:
+        del session['user_role']
     if 'memberships' in session:
         del session['memberships']
     if 'csrf_token' in session:
