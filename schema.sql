@@ -74,7 +74,7 @@ INSERT INTO users (username, password, role_id)
 VALUES (
     'admin',
     'pbkdf2:sha256:260000$9L0FBcnLCPdRrl6o$3f8c615fd19ea17899990702c52eb885e6b0e88f3852f9a4625a09eb92ace644',
-    1
+    2
 );
 INSERT INTO users (username, password, role_id)
 VALUES (

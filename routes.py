@@ -84,7 +84,8 @@ def thread(thread_id, error=None):
         logout_return = 'topics'
     return render_template(
         'thread.html', message_list=message_list, logout_return=logout_return,
-        user_id=session.get('user_id'), error=error
+        user_id=session.get('user_id'), user_role=session.get('user_role'),
+        error=error
     )
 
 @app.route('/register', methods=['GET', 'POST'])

@@ -59,6 +59,11 @@
           {% if user_id == message_list[0].writer_id %}
           <a class="btn btn-warning mr-sm-2" href="/edit/message/{{ message_list[0].id }}">Muokkaa aloitusviestiä</a>
           <a class="btn btn-danger mr-sm-2" href="/delete/message/{{ message_list[0].id }}">Poista aloitusviesti</a>
+          {% elif user_role == 1 or user_role == 2 %}
+          <a class="btn btn-danger mr-sm-2" href="/delete/message/{{ message_list[0].id }}">Poista aloitusviesti</a>
+          {% endif %}
+          {% if user_role == 1 %}
+          <a class="btn btn-danger mr-sm-2" href="/delete/thread/{{ message_list[0].id }}">Poista viestiketju</a>
           {% endif %}
         </div>
       </div>
@@ -71,7 +76,7 @@
             <div class="message-heading">Tämä viesti on poistettu</div>
           </div>
           <div class="message-footer d-inline-flex">
-            {% if user_id == message.writer_id %}
+            {% if user_id == message.writer_id or user_role == 1 or user_role == 2 %}
             <a class="btn btn-warning mr-sm-2" href="/restore/message/{{ message.id }}">Palauta</a>
             {% endif %}
           </div>
@@ -87,6 +92,8 @@
             <a class="btn btn-outline-primary mr-sm-2" href="{{ url_for('post_get', topic=message.topic_id, thread=message.thread_id, reply=message.id) }}">Vastaa</a>
             {% if user_id == message.writer_id %}
             <a class="btn btn-warning mr-sm-2" href="/edit/message/{{ message.id }}">Muokkaa</a>
+            <a class="btn btn-danger" href="/delete/message/{{ message.id }}">Poista</a>
+            {% elif user_role == 1 or user_role == 2 %}
             <a class="btn btn-danger" href="/delete/message/{{ message.id }}">Poista</a>
             {% endif %}
           </div>
