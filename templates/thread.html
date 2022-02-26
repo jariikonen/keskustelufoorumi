@@ -38,9 +38,6 @@
         <h1>Tämä viesti on poistettu</h1>
         <div class="buttons d-inline-flex">
           <a class="btn btn-primary mr-sm-2" href="{{ url_for('post_get', topic=message_list[0].topic_id, thread=message_list[0].thread_id) }}" role="button">Uusi viesti ketjuun</a>
-          {% if user_id == message_list[0].writer_id %}
-          <a class="btn btn-warning mr-sm-2" href="/restore/message/{{ message_list[0].id }}">Palauta aloitusviesti</a>
-          {% endif %}
         </div>
       </div>
       {% else %}
@@ -50,21 +47,14 @@
         <div id="first-message-container">
           <div id="first-message-content" class="first-message collapse lead" aria-expanded="false" aria-controls="first-message-content">{{ line_breaks(message_list[0].content) }}</div>
           <div id="first-message-links" class="buttons d-inline-flex">
+            {% if message_list[0].content|length > 90 %}
             <button type="button" data-target="#first-message-content" class="collapsed btn btn-link" data-toggle="collapse" aria-expanded="false" aria-controls="first-message-content"></button>
+            {% endif %}
             <a href="#message-{{ message_list[0].id }}">Siirry viestiin</a>
           </div>
         </div>
         <div class="buttons d-inline-flex">
           <a class="btn btn-primary mr-sm-2" href="{{ url_for('post_get', topic=message_list[0].topic_id, thread=message_list[0].thread_id) }}" role="button">Uusi viesti ketjuun</a>
-          {% if user_id == message_list[0].writer_id %}
-          <a class="btn btn-warning mr-sm-2" href="/edit/message/{{ message_list[0].id }}">Muokkaa aloitusviestiä</a>
-          <a class="btn btn-danger mr-sm-2" href="/delete/message/{{ message_list[0].id }}">Poista aloitusviesti</a>
-          {% elif user_role == 1 or user_role == 2 %}
-          <a class="btn btn-danger mr-sm-2" href="/delete/message/{{ message_list[0].id }}">Poista aloitusviesti</a>
-          {% endif %}
-          {% if user_role == 1 %}
-          <a class="btn btn-danger mr-sm-2" href="/delete/thread/{{ message_list[0].id }}">Poista viestiketju</a>
-          {% endif %}
         </div>
       </div>
       {% endif %}
@@ -76,8 +66,14 @@
             <div class="message-heading">Tämä viesti on poistettu</div>
           </div>
           <div class="message-footer d-inline-flex">
-            {% if user_id == message.writer_id or user_role == 1 or user_role == 2 %}
+            {% if user_id == message.writer_id and message.deleter_role == 3 %}
             <a class="btn btn-warning mr-sm-2" href="/restore/message/{{ message.id }}">Palauta</a>
+            {% elif user_id == message.writer_id and message.deleter_role != user_role %}
+            <p class="notice"><strong>HUOM!</strong> Ylläpito on poistanut viestisi, joten et voi palauttaa sitä.</p>
+            {% elif (user_role == 1 or user_role == 2) and (message.deleter_role == 1 or message.deleter_role == 2) %}
+            <a class="btn btn-warning mr-sm-2" href="/restore/message/{{ message.id }}">Palauta</a>
+            {% elif (user_role == 1 or user_role == 2) and message.writer_id != user_id and message.deleter_role == 3 %}
+            <p class="notice"><strong>HUOM!</strong> Käyttäjä on poistanut viestin, joten ylläpito ei voi palauttaa sitä.</p>
             {% endif %}
           </div>
         </div>
