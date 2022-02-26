@@ -57,7 +57,7 @@ CREATE TABLE topic_privileges (
 
 CREATE TABLE pending_message_deletions (
     message_id INTEGER REFERENCES messages UNIQUE PRIMARY KEY,
-    deleted_by INTEGER REFERENCES users,
+    deleter_role INTEGER REFERENCES roles,
     deleted_at TIMESTAMP DEFAULT NOW()
 );
 
