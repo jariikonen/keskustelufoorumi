@@ -321,39 +321,35 @@ def restore_message_get(message_id):
         ), HTTP_NOT_FOUND
     if not message_row.deleted:
         return render_template(
-            'error.html', response_code=HTTP_NOT_FOUND,
+            'error.html', response_code=HTTP_FORBIDDEN,
             message='Viestiä ei ole poistettu'
-        ), HTTP_NOT_FOUND
+        ), HTTP_FORBIDDEN
 
     user_id = session.get('user_id')
     user_role = session.get('user_role')
-    if user_id != message_row.writer_id and user_role != USER_ROLE__ADMIN\
-            and user_role != USER_ROLE__SUPER:
-        return render_template(
-            'error.html', response_code=HTTP_FORBIDDEN,
-            message='Et voi palauttaa viestiä, jota et ole poistanut'
-        ), HTTP_FORBIDDEN
-
-    if user_role == USER_ROLE__ADMIN or user_role == USER_ROLE__SUPER\
-            and  message_row.writer_id != user_id\
-            and (message_row.deleter_role == USER_ROLE__ADMIN\
-            or message_row.deleter_role == USER_ROLE__SUPER):
+    is_writer = user_id == message_row.writer_id
+    is_admin = user_role == USER_ROLE__ADMIN or user_role == USER_ROLE__SUPER
+    deleted_by_writer = message_row.deleter_role == USER_ROLE__USER
+    if is_admin and not is_writer and not deleted_by_writer:
         return render_template(
             'confirmation.html', submit_url=f'/restore/message/{message_row.id}',
             question='Haluatko varmaasti palauttaa viestin?',
             target_description=f'Viesti: {message_row.heading}',
             submit_button_text='Palauta', cancel_url=f'/thread/{message_row.thread_id}'
         )
-
-    logout_return = f'thread/{message_row.thread_id}'
-    if not auth.all_has_privilege(message_row.topic_id, PRIVILEGE_READ):
-        logout_return = 'topics'
-    referred_row = messages.get_message_concise(message_row.refers_to)
-    if user_id == message_row.writer_id:
+    if is_writer and not is_admin and deleted_by_writer:
+        logout_return = f'thread/{message_row.thread_id}'
+        if not auth.all_has_privilege(message_row.topic_id, PRIVILEGE_READ):
+            logout_return = 'topics'
+        referred_row = messages.get_message_concise(message_row.refers_to)
         return render_template(
             'restore.html', message=message_row, logout_return=logout_return,
             referred=referred_row
         )
+    error = 'Et voi palauttaa viestiä, koska se on poistettu kirjoittajan itsensä toimesta'
+    if is_writer:
+        error = 'Et voi palauttaa viestiä, koska se on poistettu ylläpidon toimesta'
+    return thread(message_row.thread_id, error), HTTP_FORBIDDEN
 
 @app.route('/restore/message/<int:message_id>', methods=['POST'])
 def restore_message_post(message_id):
@@ -371,21 +367,13 @@ def restore_message_post(message_id):
 
     user_id = session.get('user_id')
     user_role = session.get('user_role')
-    if user_id != message_row.writer_id and user_role != USER_ROLE__ADMIN\
-            and user_role != USER_ROLE__SUPER:
-        return render_template(
-            'error.html', response_code=HTTP_FORBIDDEN,
-            message='Et voi palauttaa viestiä, jota et ole poistanut'
-        ), HTTP_FORBIDDEN
-
-    if user_role == USER_ROLE__ADMIN or user_role == USER_ROLE__SUPER\
-            and  message_row.writer_id != user_id\
-            and (message_row.deleter_role == USER_ROLE__ADMIN\
-            or message_row.deleter_role == USER_ROLE__SUPER):
+    is_writer = user_id == message_row.writer_id
+    is_admin = user_role == USER_ROLE__ADMIN or user_role == USER_ROLE__SUPER
+    deleted_by_writer = message_row.deleter_role == USER_ROLE__USER
+    if is_admin and not is_writer and not deleted_by_writer:
         messages.restore_message({'id': message_row.id}, False)
         return redirect(f'/thread/{message_row.thread_id}')
-
-    if user_id == message_row.writer_id:
+    if is_writer and not is_admin and deleted_by_writer:
         message_data = {
             'id': message_id,
             'heading': request.form['heading'],
@@ -393,6 +381,12 @@ def restore_message_post(message_id):
         }
         messages.restore_message(message_data, True)
         return redirect(f'/thread/{message_row.thread_id}')
+    error = 'Et voi palauttaa viestiä, koska se on poistettu kirjoittajan itsensä toimesta'
+    if is_writer:
+        error = 'Et voi palauttaa viestiä, koska se on poistettu ylläpidon toimesta'
+    return render_template(
+        'error.html', response_code=HTTP_FORBIDDEN, message=error
+    ), HTTP_FORBIDDEN
 
 @app.route('/admin', methods=['GET'])
 def admin_get():
