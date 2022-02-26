@@ -7,11 +7,12 @@ def get_message_threads(topic_id):
     sql = """
         SELECT M.id, M.topic_id, M.refers_to, M.writer_id, M.heading,
             SUBSTRING(M.content from 0 for 50) AS sample, M.sent_at,
-            COUNT(D.message_id) AS deleted, D.deleted_by
+            COUNT(D.message_id) AS deleted, D.deleted_by,
+            UD.role_id AS deleter_role
         FROM messages M LEFT JOIN pending_message_deletions D
-            ON D.message_id=M.id
+            ON D.message_id=M.id LEFT JOIN users UD ON UD.id=D.deleted_by
         WHERE M.topic_id=:topic_id AND M.refers_to IS NULL
-        GROUP BY M.id, D.deleted_by
+        GROUP BY M.id, D.deleted_by, deleter_role
         ORDER BY M.id ASC
     """
     result = db.session.execute(sql, {'topic_id': topic_id})
@@ -48,14 +49,16 @@ def get_messages(thread_id):
     sql = """
         SELECT M.id, M.topic_id, M.refers_to, M.thread_id, M.writer_id,
             M.heading, M.content, M.sent_at, T.topic, THREAD.heading as thread,
-            U.username as writer, COUNT(D.message_id) as deleted, D.deleted_by
+            U.username as writer, COUNT(D.message_id) as deleted,
+            D.deleted_by, UD.role_id as deleter_role
         FROM messages M LEFT JOIN pending_message_deletions D
-            ON M.id=D.message_id, topics T, messages THREAD, users U
+            ON M.id=D.message_id LEFT JOIN users UD ON UD.id=D.deleted_by,
+            topics T, messages THREAD, users U
         WHERE M.thread_id=:id
             AND T.id=M.topic_id
             AND THREAD.id=M.thread_id
             AND U.id=M.writer_id
-        GROUP BY M.id, T.id, thread, U.username, D.deleted_by
+        GROUP BY M.id, T.id, thread, U.username, D.deleted_by, deleter_role
         ORDER BY M.sent_at
     """
     result = db.session.execute(sql, {'id': thread_id})
@@ -66,14 +69,16 @@ def get_message(message_id):
         SELECT M.id, M.topic_id, M.refers_to, M.thread_id, M.writer_id,
             M.heading, M.content, M.sent_at, U.username AS writer,
             T.topic as topic, THREAD.heading AS thread,
-            COUNT(D.message_id) AS deleted, D.deleted_by
+            COUNT(D.message_id) AS deleted, D.deleted_by,
+            UD.role_id as deleter_role
         FROM messages M LEFT JOIN pending_message_deletions D
-            ON M.id=D.message_id, topics T, messages as THREAD, users U
+            ON M.id=D.message_id LEFT JOIN users UD ON UD.id=D.deleted_by,
+            topics T, messages as THREAD, users U
         WHERE M.id=:id
             AND U.id=M.writer_id
             AND T.id=M.topic_id
             AND THREAD.id=M.thread_id
-        GROUP BY M.id, T.id, thread, U.username, D.deleted_by
+        GROUP BY M.id, T.id, thread, U.username, D.deleted_by, deleter_role
     """
     result = db.session.execute(sql, {'id': message_id})
     return result.fetchone()
@@ -82,11 +87,11 @@ def get_message_concise(message_id):
     sql = """
         SELECT M.id, M.topic_id, M.refers_to, M.thread_id, M.writer_id,
             M.heading, M.content, M.sent_at, COUNT(D.message_id) AS deleted,
-            D.deleted_by
+            D.deleted_by, UD.role_id as deleter_role
         FROM messages M LEFT JOIN pending_message_deletions D
-            ON M.id=D.message_id
+            ON M.id=D.message_id LEFT JOIN users UD ON UD.id=D.deleted_by
         WHERE M.id=:id
-        GROUP BY M.id, D.deleted_by
+        GROUP BY M.id, D.deleted_by, deleter_role
     """
     result = db.session.execute(sql, {'id': message_id})
     return result.fetchone()
@@ -179,3 +184,15 @@ def delete_thread(message_row, user_id, user_role, force):
             'DELETE FROM messages WHERE thread_id=:thread_id',
             {'thread_id': message_row.thread_id}
         )
+
+def restore_message(message_dict, writer:bool):
+    sql = 'DELETE FROM pending_message_deletions WHERE message_id=:id'
+    db.session.execute(sql, message_dict)
+
+    if writer:
+        sql = """
+            UPDATE messages SET heading=:heading, content=:content WHERE id=:id
+        """
+        db.session.execute(sql, message_dict)
+
+    db.session.commit()

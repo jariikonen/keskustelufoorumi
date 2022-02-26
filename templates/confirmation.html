@@ -2,14 +2,14 @@
 {% block title %}Vahvista{% endblock %}
 {% block content %}
       <div class="text-center py-5">
-        <h1 class="h2 font-weight-normal mt-3">Haluatko varmasti poistaa viestin?</h2>
-        <h2 class="h4 font-weight-normal">Viesti: "{{ message.heading }}"</h2>
+        <h1 class="h2 font-weight-normal mt-3">{{ question }}</h2>
+        <h2 class="h4 font-weight-normal">{{ target_description }}</h2>
         <form class="py-4" action="{{ submit_url }}" method="POST">
           <input type="hidden" name="confirmation" value="True">
           <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
           <div class="d-inline-flex">
-            <button class="btn btn-danger mr-2" type="submit">Vahvista</button>
-            <a class="btn btn-warning mr-sm-2" href="/thread/{{ message.thread_id }}">Peru</a>
+            <button class="btn btn-danger mr-2" type="submit">{{ submit_button_text }}</button>
+            <a class="btn btn-warning mr-sm-2" href="{{ cancel_url }}">Peru</a>
           </div>
         </form>
       </div>

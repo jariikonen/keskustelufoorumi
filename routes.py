@@ -67,8 +67,6 @@ def thread(thread_id, error=None):
         return redirect('/topics')
 
     message_list = messages.get_messages(thread_id)
-    for message in message_list:
-        print('THREAD:', message['heading'], message['deleted'])
     if len(message_list) == 0:
         return render_template(
             'error.html', reponse_code=HTTP_NOT_FOUND,
@@ -278,7 +276,10 @@ def delete_message_get(message_id):
         ), HTTP_FORBIDDEN
 
     return render_template(
-        'confirmation.html', message=message_row
+        'confirmation.html', submit_url=f'/delete/message/{message_row.id}',
+        question='Haluatko varmaasti poistaa viestin?',
+        target_description=f'Viesti: {message_row.heading}',
+        submit_button_text='Poista', cancel_url=f'/thread/{message_row.thread_id}'
     )
 
 @app.route('/delete/message/<int:message_id>', methods=['POST'])
@@ -308,6 +309,89 @@ def delete_message_post(message_id):
         'error.html', message=error_dict['message'],
         response_code=error_dict['response_code']
     ), error_dict['response_code']
+
+@app.route('/restore/message/<int:message_id>', methods=['GET'])
+def restore_message_get(message_id):
+    message_row = messages.get_message(message_id)
+    if not message_row:
+        return render_template(
+            'error.html', response_code=HTTP_NOT_FOUND,
+            message='Viestiä ei löytynyt'
+        ), HTTP_NOT_FOUND
+    if not message_row.deleted:
+        return render_template(
+            'error.html', response_code=HTTP_NOT_FOUND,
+            message='Viestiä ei ole poistettu'
+        ), HTTP_NOT_FOUND
+
+    user_id = session.get('user_id')
+    user_role = session.get('user_role')
+    if user_id != message_row.writer_id and user_role != USER_ROLE__ADMIN\
+            and user_role != USER_ROLE__SUPER:
+        return render_template(
+            'error.html', response_code=HTTP_FORBIDDEN,
+            message='Et voi palauttaa viestiä, jota et ole poistanut'
+        ), HTTP_FORBIDDEN
+
+    if user_role == USER_ROLE__ADMIN or user_role == USER_ROLE__SUPER\
+            and  message_row.writer_id != user_id\
+            and (message_row.deleter_role == USER_ROLE__ADMIN\
+            or message_row.deleter_role == USER_ROLE__SUPER):
+        return render_template(
+            'confirmation.html', submit_url=f'/restore/message/{message_row.id}',
+            question='Haluatko varmaasti palauttaa viestin?',
+            target_description=f'Viesti: {message_row.heading}',
+            submit_button_text='Palauta', cancel_url=f'/thread/{message_row.thread_id}'
+        )
+
+    logout_return = f'thread/{message_row.thread_id}'
+    if not auth.all_has_privilege(message_row.topic_id, PRIVILEGE_READ):
+        logout_return = 'topics'
+    referred_row = messages.get_message_concise(message_row.refers_to)
+    if user_id == message_row.writer_id:
+        return render_template(
+            'restore.html', message=message_row, logout_return=logout_return,
+            referred=referred_row
+        )
+
+@app.route('/restore/message/<int:message_id>', methods=['POST'])
+def restore_message_post(message_id):
+    message_row = messages.get_message_concise(message_id)
+    if not message_row:
+        return render_template(
+            'error.html', response_code=HTTP_NOT_FOUND,
+            message='Viestiä ei löytynyt'
+        ), HTTP_NOT_FOUND
+    if not message_row.deleted:
+        return render_template(
+            'error.html', response_code=HTTP_NOT_FOUND,
+            message='Viestiä ei ole poistettu'
+        ), HTTP_NOT_FOUND
+
+    user_id = session.get('user_id')
+    user_role = session.get('user_role')
+    if user_id != message_row.writer_id and user_role != USER_ROLE__ADMIN\
+            and user_role != USER_ROLE__SUPER:
+        return render_template(
+            'error.html', response_code=HTTP_FORBIDDEN,
+            message='Et voi palauttaa viestiä, jota et ole poistanut'
+        ), HTTP_FORBIDDEN
+
+    if user_role == USER_ROLE__ADMIN or user_role == USER_ROLE__SUPER\
+            and  message_row.writer_id != user_id\
+            and (message_row.deleter_role == USER_ROLE__ADMIN\
+            or message_row.deleter_role == USER_ROLE__SUPER):
+        messages.restore_message({'id': message_row.id}, False)
+        return redirect(f'/thread/{message_row.thread_id}')
+
+    if user_id == message_row.writer_id:
+        message_data = {
+            'id': message_id,
+            'heading': request.form['heading'],
+            'content': request.form['content']
+        }
+        messages.restore_message(message_data, True)
+        return redirect(f'/thread/{message_row.thread_id}')
 
 @app.route('/admin', methods=['GET'])
 def admin_get():
