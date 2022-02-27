@@ -94,12 +94,18 @@ def get_message_concise(message_id):
 
 def check_message_data(message_data):
     if message_data['heading'] == '':
-        return 'Otsikko ei saa olla tyhjä!'
+        return 'Otsikko ei saa olla tyhjä'
+    if len(message_data['heading']) > MAX_HEADING:
+        return f'Otsikon maksimipituus on {MAX_HEADING} merkkiä'
     if message_data['content'] == '':
         return 'Viestin sisältö ei saa olla tyhjä'
+    if len(message_data['content']) > MAX_CONTENT:
+        return f'Viestin maksimipituus on {MAX_CONTENT} merkkiä'
+    return None
+
+def check_refers_to(message_data):
     if message_data['refers_to'] == '':
         message_data['refers_to'] = message_data['thread_id']
-    return None
 
 def update_thread_id(message_id, thread_id):
     sql = """

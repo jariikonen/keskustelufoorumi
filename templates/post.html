@@ -48,16 +48,15 @@
       <form action="/post" method="POST">
         <div class="form-group">
           <label for="heading">Otsikko</label>
-          <input type="text" class="form-control" name="heading" value="{% if reply_to %}VS: {{ reply_to.heading }}"{% else %}" autofocus{% endif %}>
+          <input type="text" class="form-control" name="heading" maxlength="{{ max_heading }}" value="{% if heading %}{{ heading}}{% endif %}"{% if heading_autofocus %} autofocus{% endif %}>
         </div>
         <div class="form-group">
           <label for="content">Viesti</label>
-          <textarea class="form-control" name="content" rows="4"{% if reply_to %} autofocus{% endif %}></textarea>
+          <textarea class="form-control" name="content" maxlength="{{ max_content }}" rows="4"{% if content_autofocus %} autofocus{% endif %}>{% if content %}{{ content }}{% endif %}</textarea>
         </div>
         <input type="hidden" name="topic_id" value="{{ topic.id }}">
         <input type="hidden" name="refers_to" value="{{ reply_to.id }}">
         <input type="hidden" name="thread_id" value="{{ thread.id }}">
-        <input type="hidden" name="return_url" value="{{ return_url }}">
         <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
         <div class="d-inline-flex">
           <button class="btn btn-primary mr-2" type="submit">Lähetä</button>

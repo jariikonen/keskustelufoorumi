@@ -131,6 +131,55 @@ def logout():
     auth.logout()
     return redirect(f'/{request.args.get("return_url", "")}')
 
+def post_login(topic_id, thread_id, reply_to_id):
+    return_url = f'post?topic={topic_id}'
+    if thread_id and thread_id != 0:
+        return_url += f'&thread={thread_id}&reply={reply_to_id}'
+    return render_template('login.html', return_url=return_url)
+
+def post_return_url(thread_id, topic_id):
+    if thread_id:
+        return f'thread/{thread_id}'
+    return f'topic/{topic_id}'
+
+def post_render_template(
+        topic_row, thread_row, reply_row, return_url, logout_return,
+        error=None, heading=None, content=None):
+    heading_autofocus = True
+    content_autofocus = False
+    if reply_row and not heading:
+        heading = f'VS: {reply_row.heading}'[:MAX_HEADING]
+        heading_autofocus = False
+        content_autofocus = True
+    return render_template(
+        'post.html', error=error, return_url=return_url, topic=topic_row,
+        thread=thread_row, reply_to=reply_row, logout_return=logout_return,
+        heading=heading, content=content, heading_autofocus=heading_autofocus,
+        content_autofocus=content_autofocus, max_heading=MAX_HEADING,
+        max_content=MAX_CONTENT
+    )
+
+def post_check_privilege(
+        topic_id:int, thread_id:int, topic_row, thread_row, reply_row,
+        error=None, heading=None, content=None):
+    topic_privileges = auth.has_privilege(topic_id, PRIVILEGE_WRITE)
+    if topic_privileges:
+        return_url = post_return_url(thread_id, topic_id)
+        logout_return = return_url
+        if not auth.all_has_privilege(topic_id, PRIVILEGE_READ, topic_privileges):
+            logout_return = 'topics'
+        return post_render_template(
+            topic_row, thread_row, reply_row, return_url, logout_return,
+            error, heading[:MAX_HEADING], content[:MAX_CONTENT]
+        )
+    if thread_id:
+        return thread(
+            thread_id, 'Sinulla ei ole kirjoitusoikeutta alueella'
+        ), HTTP_FORBIDDEN
+    return topic(
+        topic_id, 'Sinulla ei ole kirjoitusoikeutta alueella'
+    ), HTTP_FORBIDDEN
+
 @app.route('/post', methods=['GET'])
 def post_get():
     topic_id = request.args.get('topic', 0)
@@ -143,81 +192,76 @@ def post_get():
         ), HTTP_NOT_FOUND
 
     if 'username' not in session:
-        return_url = f'post?topic={topic_id}'
-        if thread_id and thread_id != 0:
-            return_url += f'&thread={thread_id}&reply={reply_to_id}'
-        return render_template('login.html', return_url=return_url)
+        return post_login(topic_id, thread_id, reply_to_id)
 
     topic_row = topics.get_topic(topic_id)
     thread_row = messages.get_message(thread_id)
     reply_row = messages.get_message(reply_to_id)
-    topic_privileges = auth.has_privilege(topic_id, PRIVILEGE_WRITE)
-    if topic_privileges:
-        if thread_id:
-            return_url = f'thread/{thread_id}'
-        else:
-            return_url = f'topic/{topic_id}'
-        logout_return = return_url
-        if not auth.all_has_privilege(topic_id, PRIVILEGE_READ, topic_privileges):
-            logout_return = 'topics'
-        return render_template(
-            'post.html', return_url=return_url, topic=topic_row,
-            thread=thread_row, reply_to=reply_row, logout_return=logout_return
-        )
-    if thread_id:
-        return thread(
-            thread_id, 'Sinulla ei ole kirjoitusoikeutta alueella'
-        ), HTTP_FORBIDDEN
-    return topic(
-        topic_id, 'Sinulla ei ole kirjoitusoikeutta alueella'
-    ), HTTP_FORBIDDEN
-
-def post_get_with_error_msg(error, return_url, topic_id, thread_id, reply_to_id):
-    if 'username' not in session:
-        return_url = f'post?topic={topic_id}'
-        if thread_id and thread_id != 0:
-            return_url += f'&thread={thread_id}&reply={reply_to_id}'
-        return render_template('login.html', return_url=return_url)
-
-    topic_row = topics.get_topic(topic_id)
-    thread_row = messages.get_message(thread_id)
-    reply_row = messages.get_message(reply_to_id)
-    return render_template(
-        'post.html', error=error, return_url=return_url, topic=topic_row,
-        thread=thread_row, reply_to=reply_row
+    return post_check_privilege(
+        topic_id, thread_id, topic_row, thread_row, reply_row
     )
+
+def post_get_with_error(
+        error, topic_id, thread_id, reply_to_id, heading, content):
+    topic_row = topics.get_topic(topic_id)
+    thread_row = messages.get_message(thread_id)
+    reply_row = messages.get_message(reply_to_id)
+    return post_check_privilege(
+        topic_id, thread_id, topic_row, thread_row, reply_row, error,
+        heading, content
+    )
+
+def post_post_check_requirements(topic_id:int):
+    if 'username' not in session:
+        return {
+            'response_code': HTTP_FORBIDDEN,
+            'message': 'Sinun täytyy olla kirjautunut sisään voidaksesi '\
+                +'julkaista foorumilla'
+        }
+    if not auth.has_privilege(topic_id, PRIVILEGE_WRITE):
+        return {
+            'response_code': HTTP_FORBIDDEN,
+            'message': 'Sinulla ei ole kirjoitusoikeutta alueella' 
+        }
+    csrf_token = request.form.get('csrf_token')
+    if csrf_token != session['csrf_token']:
+        return {
+            'response_code': HTTP_FORBIDDEN,
+            'message': 'Toimenpide ei ole oikeutettu (puuttuva tunniste)'
+        }
 
 @app.route('/post', methods=['POST'])
 def post_post():
-    csrf_token = request.form.get('csrf_token')
-    if csrf_token != session['csrf_token']:
-        return post_get_with_error_msg(
-            error='Toimenpide ei ole oikeutettu (puuttuva tunniste)!',
-            return_url=request.form['return_url'],
-            topic_id=request.form.get('topic_id', 0),
-            thread_id=request.form.get('thread_id', 0),
-            reply_to_id=request.form.get('refers_to', 0)
-        )
+    topic_id = None if request.form.get('topic_id') == ''\
+        else request.form.get('topic_id')
+    thread_id = None if request.form.get('thread_id') == ''\
+        else request.form.get('thread_id')
+    refers_to = None if request.form.get('refers_to') == ''\
+        else request.form.get('refers_to')
+
+    error_dict = post_post_check_requirements(topic_id)
+    if error_dict:
+        return render_template(
+            'error.html', response_code=error_dict['response_code'],
+            message=error_dict['message']
+        ), error_dict['response_code']
 
     message_data = {
-        'topic_id': request.form['topic_id'],
-        'refers_to': request.form['refers_to'],
-        'thread_id': request.form['thread_id'],
-        'writer_id': session['user_id'],
-        'heading': request.form['heading'],
+        'topic_id': topic_id, 'refers_to': refers_to, 'thread_id': thread_id,
+        'writer_id': session['user_id'], 'heading': request.form['heading'],
         'content': request.form['content']
     }
+    messages.check_refers_to(message_data)
     error = messages.check_message_data(message_data)
-    if not error:
-        messages.insert_message(message_data)
-        return redirect(f'/{request.form["return_url"]}')
-    return post_get_with_error_msg(
-        error,
-        return_url=request.form['return_url'],
-        topic_id=request.form.get('topic_id', 0),
-        thread_id=request.form.get('thread_id', 0),
-        reply_to_id=request.form.get('refers_to', 0)
-    )
+    if error:
+        return post_get_with_error(
+            error, topic_id=topic_id, thread_id=thread_id, reply_to_id=refers_to,
+            heading=request.form.get('heading'),
+            content=request.form.get('content')
+        ), HTTP_BAD_REQUEST
+    messages.insert_message(message_data)
+    return_url = post_return_url(thread_id, topic_id)
+    return redirect(f'/{return_url}')
 
 @app.route('/edit/message/<int:message_id>', methods=['GET'])
 def edit_message_get(message_id):
@@ -238,7 +282,24 @@ def edit_message_get(message_id):
         logout_return = 'topics'
     return render_template(
         'edit.html', message=message_row, user_id=user_id,
-        referred=referred_row, logout_return=logout_return
+        referred=referred_row, logout_return=logout_return,
+        max_heading=MAX_HEADING, max_content=MAX_CONTENT
+    )
+
+def edit_message_get_with_error(message_id, error, heading, content):
+    message_row = messages.get_message(message_id)
+    user_id = session.get('user_id')
+    referred_row = None
+    if message_row.refers_to:
+        referred_row = messages.get_message(message_row.refers_to)
+    logout_return = f'thread/{message_row.thread_id}'
+    if not auth.all_has_privilege(message_row.topic_id, PRIVILEGE_READ):
+        logout_return = 'topics'
+    return render_template(
+        'edit.html', message=message_row, user_id=user_id,
+        referred=referred_row, logout_return=logout_return, error=error,
+        heading=heading[:MAX_HEADING], content=content[:MAX_CONTENT],
+        max_heading=MAX_HEADING, max_content=MAX_CONTENT
     )
 
 @app.route('/edit/message/<int:message_id>', methods=['POST'])
@@ -255,6 +316,13 @@ def edit_message_post(message_id):
         'heading': request.form['heading'],
         'content': request.form['content']
     }
+    error = messages.check_message_data(message_data)
+    if error:
+        return edit_message_get_with_error(
+            message_id, error,
+            heading=request.form.get('heading'),
+            content=request.form.get('content')
+        ), HTTP_BAD_REQUEST
     messages.update_message(message_data)
     return redirect(f'/thread/{message_row.thread_id}')
 
@@ -332,24 +400,50 @@ def restore_message_get(message_id):
     deleted_by_writer = message_row.deleter_role == USER_ROLE__USER
     if is_admin and not is_writer and not deleted_by_writer:
         return render_template(
-            'confirmation.html', submit_url=f'/restore/message/{message_row.id}',
+            'confirmation.html',
+            submit_url=f'/restore/message/{message_row.id}',
             question='Haluatko varmaasti palauttaa viestin?',
             target_description=f'Viesti: {message_row.heading}',
-            submit_button_text='Palauta', cancel_url=f'/thread/{message_row.thread_id}'
+            submit_button_text='Palauta',
+            cancel_url=f'/thread/{message_row.thread_id}'
         )
-    if is_writer and not is_admin and deleted_by_writer:
+    if (is_writer and not is_admin and deleted_by_writer)\
+            or (is_writer and is_admin):
         logout_return = f'thread/{message_row.thread_id}'
         if not auth.all_has_privilege(message_row.topic_id, PRIVILEGE_READ):
             logout_return = 'topics'
         referred_row = messages.get_message_concise(message_row.refers_to)
         return render_template(
             'restore.html', message=message_row, logout_return=logout_return,
-            referred=referred_row
+            referred=referred_row, max_heading=MAX_HEADING,
+            max_content=MAX_CONTENT
         )
-    error = 'Et voi palauttaa viestiä, koska se on poistettu kirjoittajan itsensä toimesta'
+    error = 'Et voi palauttaa viestiä, koska se on poistettu kirjoittajan '\
+        +'itsensä toimesta'
     if is_writer:
-        error = 'Et voi palauttaa viestiä, koska se on poistettu ylläpidon toimesta'
+        error = 'Et voi palauttaa viestiä, koska se on poistettu ylläpidon '\
+            +'toimesta'
     return thread(message_row.thread_id, error), HTTP_FORBIDDEN
+
+def restore_message_get_with_error(message_id, error, heading, content):
+    message_row = messages.get_message(message_id)
+    user_id = session.get('user_id')
+    user_role = session.get('user_role')
+    is_writer = user_id == message_row.writer_id
+    is_admin = user_role == USER_ROLE__ADMIN or user_role == USER_ROLE__SUPER
+    deleted_by_writer = message_row.deleter_role == USER_ROLE__USER
+    if (is_writer and not is_admin and deleted_by_writer)\
+            or (is_writer and is_admin):
+        logout_return = f'thread/{message_row.thread_id}'
+        if not auth.all_has_privilege(message_row.topic_id, PRIVILEGE_READ):
+            logout_return = 'topics'
+        referred_row = messages.get_message_concise(message_row.refers_to)
+        return render_template(
+            'restore.html', message=message_row, logout_return=logout_return,
+            referred=referred_row, error=error, heading=heading[:MAX_HEADING],
+            content=content[:MAX_CONTENT], max_heading=MAX_HEADING,
+            max_content=MAX_CONTENT
+        )
 
 @app.route('/restore/message/<int:message_id>', methods=['POST'])
 def restore_message_post(message_id):
@@ -373,17 +467,27 @@ def restore_message_post(message_id):
     if is_admin and not is_writer and not deleted_by_writer:
         messages.restore_message({'id': message_row.id}, False)
         return redirect(f'/thread/{message_row.thread_id}')
-    if is_writer and not is_admin and deleted_by_writer:
+    if (is_writer and not is_admin and deleted_by_writer)\
+            or (is_writer and is_admin):
         message_data = {
             'id': message_id,
             'heading': request.form['heading'],
             'content': request.form['content']
         }
+        error = messages.check_message_data(message_data)
+        if error:
+            return restore_message_get_with_error(
+                message_id, error,
+                heading=request.form.get('heading'),
+                content=request.form.get('content')
+            ), HTTP_BAD_REQUEST
         messages.restore_message(message_data, True)
         return redirect(f'/thread/{message_row.thread_id}')
-    error = 'Et voi palauttaa viestiä, koska se on poistettu kirjoittajan itsensä toimesta'
+    error = 'Et voi palauttaa viestiä, koska se on poistettu kirjoittajan '\
+        +'itsensä toimesta'
     if is_writer:
-        error = 'Et voi palauttaa viestiä, koska se on poistettu ylläpidon toimesta'
+        error = 'Et voi palauttaa viestiä, koska se on poistettu ylläpidon '\
+            +'toimesta'
     return render_template(
         'error.html', response_code=HTTP_FORBIDDEN, message=error
     ), HTTP_FORBIDDEN
