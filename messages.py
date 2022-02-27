@@ -104,7 +104,7 @@ def check_message_data(message_data):
     return None
 
 def check_refers_to(message_data):
-    if message_data['refers_to'] == '':
+    if not message_data['refers_to']:
         message_data['refers_to'] = message_data['thread_id']
 
 def update_thread_id(message_id, thread_id):
