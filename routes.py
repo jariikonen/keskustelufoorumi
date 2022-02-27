@@ -170,7 +170,8 @@ def post_check_privilege(
             logout_return = 'topics'
         return post_render_template(
             topic_row, thread_row, reply_row, return_url, logout_return,
-            error, heading[:MAX_HEADING], content[:MAX_CONTENT]
+            error, heading=heading[:MAX_HEADING] if heading else None,
+            content=content[:MAX_CONTENT] if content else None
         )
     if thread_id:
         return thread(
