@@ -26,14 +26,17 @@
         <li class="nav-item">
           <a class="nav-link" href="/logout{{ return_arg() }}">Kirjaa ulos: <span class="username">{{ session.username }}</span></a>
         </li>
+        <li>
+          <a class="nav-link" href="/user/{{ session.user_id }}">Omat tiedot</a>
+        </li>
         {% else %}
         <li class="nav-item{% block login_nav_class %}{% endblock %}">
           <a class="nav-link" href="/login{{ return_arg() }}">Kirjaudu</a>
         </li>
-        {% endif %}
         <li class="nav-item{% block register_nav_class %}{% endblock %}">
           <a class="nav-link" href="/register{{ return_arg() }}">Rekisteröidy</a>
         </li>
+        {% endif %}
       </ul>
       <form class="form-inline mt-2 mt-md-0 ml-auto">
         <input class="form-control mr-sm-2" type="text" placeholder="Haku" aria-label="Search">
