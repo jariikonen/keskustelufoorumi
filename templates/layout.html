@@ -27,7 +27,7 @@
           <a class="nav-link" href="/logout{{ return_arg() }}">Kirjaa ulos: <span class="username">{{ session.username }}</span></a>
         </li>
         <li>
-          <a class="nav-link" href="/user/{{ session.user_id }}">Omat tiedot</a>
+          <a class="nav-link{% block user_nav_class %}{% endblock %}" href="/user/{{ session.user_id }}">Omat tiedot</a>
         </li>
         {% else %}
         <li class="nav-item{% block login_nav_class %}{% endblock %}">
