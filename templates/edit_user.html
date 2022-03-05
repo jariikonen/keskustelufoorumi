@@ -29,7 +29,7 @@
           {% endif %}
           <input type="password" class="form-control middle" name="new_password1" placeholder="Uusi salasana" maxlength="{{ max_password }}">
           <input type="password" class="form-control last" name="new_password2" placeholder="Uusi salasana uudelleen" maxlength="{{ max_password }}">
-          {% if current_data.is_admin %}
+          {% if current_data.is_admin and not current_data.is_target %}
           {% if target_data.role_user %}
           <div class="form-check form-check-inline mt-1 mb-3">
             <input class="form-check-input" type="radio" name="role" id="newRoleUser" value="3" checked>

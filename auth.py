@@ -16,6 +16,8 @@ def set_user_session(user_id, username, user_role, membership_tuple):
 def login(username, password):
     sql = 'SELECT id, password, role_id FROM users WHERE username=:username'
     user = db.session.execute(sql, {'username': username}).fetchone()
+    if user and user.role_id == USER_ROLE__DELETED:
+        return False
     if user and user.password and password:
         if check_password_hash(user.password, password):
             membership_tuple = users.get_user_memberships(user.id)

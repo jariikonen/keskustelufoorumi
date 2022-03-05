@@ -19,14 +19,15 @@
           <dd class="col-6">{{ target.id }}</dd>
           <dt class="col-6 text-right">Käyttäjänimi:</dt>
           <dd class="col-6">{{ target.username }}</dd>
-          {% if current_data.is_target or current_data.is_admin %}
-          <dt class="col-6 text-right">Rooli:</dt>
-          <dd class="col-6">{% if target_data.role_super %}Pääkäyttäjä{% elif target_data.role_admin %}Ylläpitäjä{% elif target_data.role_user %}Käyttäjä{% endif %}</dd>
-          <dt class="col-6 text-right">Ryhmäjäsenyydet:</dt>
-          <dd class="col-6">{{ group_str }}</dd>
           <dt class="col-6 text-right">Rekisteröitynyt:</dt>
           <dd class="col-6">{{ target.registered_at.strftime('%d.%m.%Y klo %H:%M') }}</dd>
+          <dt class="col-6 text-right">Rooli:</dt>
+          <dd class="col-6">{% if target_data.role_super %}Pääkäyttäjä{% elif target_data.role_admin %}Ylläpitäjä{% elif target_data.role_user %}Käyttäjä{% elif target_data.role_deleted %}Poistettu{% endif %}</dd>
+          {% if current_data.is_target or current_data.is_admin %}
+          <dt class="col-6 text-right">Ryhmäjäsenyydet:</dt>
+          <dd class="col-6">{{ group_str }}</dd>
           {% endif %}
+          {% if not target_data.role_deleted %}
           {% if (current_data.is_target or current_data.is_admin) and not target_data.role_super %}
           <dt class="col-6 text-right">Muokkaa käyttäjätietoja:</dt>
           <dd class="col-6"><a class="btn btn-primary" href="/edit/user/{{ target.id}}">Muokkaa</a></dd>
@@ -42,6 +43,7 @@
           {% if target_data.role_super and current_data.is_super %}
           <dt class="col-6 text-right">Poista tili:</dt>
           <dd class="col-6"><a class="btn btn-danger" href="/delete/user/{{ target.id}}">Poista</a></dd>
+          {% endif %}
           {% endif %}
       </div>
 {% endblock %}

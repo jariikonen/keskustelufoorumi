@@ -37,7 +37,7 @@
       <div id="thread-header">
         <h1>Tämä viesti on poistettu</h1>
         <div class="buttons d-inline-flex">
-          <a class="btn btn-primary mr-sm-2" href="{{ url_for('post_get', topic=message_list[0].topic_id, thread=message_list[0].thread_id) }}" role="button">Uusi viesti ketjuun</a>
+          <a class="btn btn-primary mr-sm-2 mb-3" href="{{ url_for('post_get', topic=message_list[0].topic_id, thread=message_list[0].thread_id) }}" role="button">Uusi viesti ketjuun</a>
         </div>
       </div>
       {% else %}
@@ -54,7 +54,7 @@
           </div>
         </div>
         <div class="buttons d-inline-flex">
-          <a class="btn btn-primary mr-sm-2" href="{{ url_for('post_get', topic=message_list[0].topic_id, thread=message_list[0].thread_id) }}" role="button">Uusi viesti ketjuun</a>
+          <a class="btn btn-primary mr-sm-2 mb-2" href="{{ url_for('post_get', topic=message_list[0].topic_id, thread=message_list[0].thread_id) }}" role="button">Uusi viesti ketjuun</a>
         </div>
       </div>
       {% endif %}

@@ -61,9 +61,15 @@ CREATE TABLE pending_message_deletions (
     deleted_at TIMESTAMP DEFAULT NOW()
 );
 
+CREATE TABLE pending_user_deletions (
+    user_id INTEGER REFERENCES users UNIQUE PRIMARY KEY,
+    deleted_at TIMESTAMP DEFAULT NOW()
+);
+
 INSERT INTO roles (role) VALUES ('super');
 INSERT INTO roles (role) VALUES ('admin');
 INSERT INTO roles (role) VALUES ('user');
+INSERT INTO roles (role) VALUES ('deleted');
 
 INSERT INTO groups (group_name) VALUES ('SUPER');
 INSERT INTO groups (group_name) VALUES ('ADMIN');

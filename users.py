@@ -135,13 +135,16 @@ def get_target_user_data(target_row):
         if target_row['role_id'] == USER_ROLE__ADMIN else False
     target_role_super = True\
         if target_row['role_id'] == USER_ROLE__SUPER else False
+    target_role_deleted = True\
+        if target_row['role_id'] == USER_ROLE__DELETED else False
     return {
         'user_id': target_row.id,
         'username': target_row.username,
         'role_id': target_row.role_id,
         'role_user': target_role_user,
         'role_admin': target_role_admin,
-        'role_super': target_role_super
+        'role_super': target_role_super,
+        'role_deleted': target_role_deleted
     }
 
 def find_changing_elements__edit_user(target_user_data, form_data):
@@ -220,3 +223,23 @@ def count_other_super(user_id):
             AND NOT id=:user_id
     """
     return db.session.execute(sql, {'user_id': user_id}).fetchone()[0]
+
+def create_pending_delete(user_id):
+    sql = """
+        INSERT INTO pending_user_deletions (user_id)
+        VALUES (:user_id)
+    """
+    db.session.execute(sql, {'user_id': int(user_id)})
+    sql = 'UPDATE users SET role_id=:role_id WHERE id=:user_id'
+    db.session.execute(
+        sql, {'role_id': USER_ROLE__DELETED, 'user_id': user_id})
+    db.session.commit()
+
+def delete_user(user_id):
+    sql = 'DELETE FROM users WHERE id=:user_id'
+    try:
+        db.session.execute(sql, {'user_id': user_id})
+    except IntegrityError:
+        db.session.rollback()
+        create_pending_delete(user_id)
+    db.session.commit()

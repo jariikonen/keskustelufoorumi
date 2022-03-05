@@ -127,7 +127,7 @@ def login():
         if auth.login(username, password):
             return redirect(f'/{return_url}')
         return render_template(
-            'login.html', error='Väärä tunnus tai salasana!',
+            'login.html', error='Väärä tunnus tai salasana',
             return_url=return_url
         )
 
@@ -499,13 +499,18 @@ def restore_message_post(message_id):
     ), HTTP_FORBIDDEN
 
 @app.route('/user/<int:user_id>', methods=['GET'])
-def user_get(user_id, error=None):
+def user__get(user_id, error=None):
     alert_class = request.args.get('alert_class')
     alert_message = request.args.get('alert_message')
 
     current_user_data = users.get_current_user_data(target_id=user_id)
 
     target_row = users.get_user_data(user_id)
+    if not target_row:
+        return render_template(
+            'error.html', response_code=HTTP_NOT_FOUND,
+            message='Käyttäjää ei löytynyt'
+        ), HTTP_NOT_FOUND
     target_user_data = users.get_target_user_data(target_row)
 
     group_str = None
@@ -527,7 +532,7 @@ def user_get(user_id, error=None):
     ), HTTP_NOT_FOUND
 
 @app.route('/edit/user/<int:user_id>', methods=['GET'])
-def edit_user_get(user_id, error=None):
+def edit_user__get(user_id, error=None):
     current_user_data = users.get_current_user_data(user_id)
     only_super = True
     if current_user_data['is_super']:
@@ -550,13 +555,13 @@ def edit_user_get(user_id, error=None):
 @app.route('/edit/user/<int:user_id>', methods=['POST'])
 def edit_user_post(user_id):
     if request.form['csrf_token'] != session['csrf_token']:
-        return user_get(
+        return user__get(
             user_id, 'Toimenpide ei ole oikeutettu (puuttuva tunniste)'
         ), HTTP_FORBIDDEN
 
     if not auth.check_password(
             session['user_id'], request.form['requester_password']):
-        return edit_user_get(user_id, 'Väärä salasana'), HTTP_FORBIDDEN
+        return edit_user__get(user_id, 'Väärä salasana'), HTTP_FORBIDDEN
 
     current_user_data = users.get_current_user_data(target_id=user_id)
     target_row = users.get_user_data(user_id)
@@ -567,13 +572,13 @@ def edit_user_post(user_id):
         current_user_data, target_user_data, changing_elements_dict,
         request.form)
     if error_dict:
-        return user_get(
+        return user__get(
             user_id, error_dict['message']), error_dict['response_code']
     
     error_dict = users.validate_user_data__edit_user(
         changing_elements_dict, request.form)
     if error_dict:
-        return user_get(
+        return user__get(
             user_id, error_dict['message']), error_dict['response_code']
 
     error_dict = None
@@ -595,6 +600,60 @@ def edit_user_post(user_id):
 
     message = users.get_success_message__edit_user(
         changing_elements_dict, request.form)
+    return redirect(
+        f'/user/{user_id}?alert_class=success&'\
+            + f'alert_message={url.encode(message)}')
+
+@app.route('/delete/user/<int:user_id>', methods=['GET'])
+def delete_user__get(user_id):
+    user_row = users.get_user_data(user_id)
+    if not user_row:
+        return render_template(
+            'error.html', response_code=HTTP_NOT_FOUND,
+            message='Käyttäjää ei löytynyt'
+        ), HTTP_NOT_FOUND
+
+    return render_template(
+        'confirmation.html', submit_url=f'/delete/user/{user_id}',
+        question='Haluatko varmaasti poistaa käyttäjätilin?',
+        target_description=f'Käyttäjätili: {user_row.username}',
+        submit_button_text='Poista', cancel_url=f'/user/{user_id}'
+    )
+
+@app.route('/delete/user/<int:user_id>', methods=['POST'])
+def delete_user__post(user_id):
+    if request.form['csrf_token'] != session['csrf_token']:
+        return user__get(
+            user_id, 'Toimenpide ei ole oikeutettu (puuttuva tunniste)'
+        ), HTTP_FORBIDDEN
+
+    current_user_data = users.get_current_user_data(target_id=user_id)
+    only_super = True
+    if current_user_data['is_super']:
+        other_supers = users.count_other_super(user_id)
+        only_super = False if other_supers > 0 else True
+    target_row = users.get_user_data(user_id)
+    target_user_data = users.get_target_user_data(target_row)
+    if not current_user_data['is_target']\
+            and not current_user_data['is_admin']:
+        return user__get(
+            user_id, 'Tavallinen käyttäjä voi poistaa vain oman tilinsä'
+        ), HTTP_FORBIDDEN
+    if not current_user_data['is_target'] and current_user_data['is_admin']\
+            and not current_user_data['is_super']\
+            and target_user_data['role_super']:
+        return user__get(
+            user_id, 'Vain pääkäyttäjä voi poistaa pääkäyttäjätilejä'
+        ), HTTP_FORBIDDEN
+    if target_user_data['role_super'] and only_super:
+        return user__get(
+            user_id, 'Et voi poistaa tiliäsi, koska olet järjestelmän ainoa '\
+                'pääkäyttäjä'
+        ), HTTP_FORBIDDEN
+
+    auth.logout()
+    users.delete_user(user_id)
+    message = f'Käyttäjätili {target_row.username} poistettu'
     return redirect(
         f'/user/{user_id}?alert_class=success&'\
             + f'alert_message={url.encode(message)}')
