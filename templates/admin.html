@@ -2,16 +2,16 @@
 {% block title %}Hallinta{% endblock %}
 {% block admin_nav_class %} active{% endblock %}
 {% block content %}
-    {% if alert %}
+      {% if alert %}
       <div class="alert alert-{{ alert.class }} text-center" role="alert">
         {{ alert }}
       </div>
-    {% endif %}
-    {% if error %}
+      {% endif %}
+      {% if error %}
       <div class="alert alert-danger text-center" role="alert">
         {{ error }}
       </div>
-    {% endif %}
+      {% endif %}
       <h1>Hallinta</h1>
       <form action="/admin" method="POST">
         <h3>Keskustelualueiden lisääminen</h3>

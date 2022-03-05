@@ -2,16 +2,16 @@
 {% block title %}Käyttäjätiedot - {{ target.username }}{% endblock %}
 {% block user_nav_class %} active{% endblock %}
 {% block content %}
-    {% if alert_message %}
+      {% if alert_message %}
       <div class="alert alert-{{ alert_class }} text-center" role="alert">
         {{ alert_message }}
       </div>
-    {% endif %}
-    {% if error %}
+      {% endif %}
+      {% if error %}
       <div class="alert alert-danger text-center" role="alert">
         {{ error }}
       </div>
-    {% endif %}
+      {% endif %}
       <div id="user-data">
         <h1 class="h3 pt-5 pb-3 mb-3 font-weight-normal text-center">Käyttäjätiedot &ndash; {{ target.username }}</h1>
         <dl class="row text-left">
