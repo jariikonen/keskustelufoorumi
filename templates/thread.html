@@ -37,13 +37,13 @@
       <div id="thread-header">
         <h1>Tämä viesti on poistettu</h1>
         <div class="buttons d-inline-flex">
-          <a class="btn btn-primary mr-sm-2 mb-3" href="{{ url_for('post_get', topic=message_list[0].topic_id, thread=message_list[0].thread_id) }}" role="button">Uusi viesti ketjuun</a>
+          <a class="btn btn-primary mr-sm-2 mb-2" href="{{ url_for('post_get', topic=message_list[0].topic_id, thread=message_list[0].thread_id) }}" role="button">Uusi viesti ketjuun</a>
         </div>
       </div>
       {% else %}
       <div id="thread-header">
         <h1>{{ message_list[0].heading }}</h1>
-        <div class="thread-meta">Aloittanut <a href="#">{{ message_list[0].writer }}</a>, {{ message_list[0].sent_at.strftime('%d.%m.%Y klo %H:%M') }}</div>
+        <div class="thread-meta">Aloittanut <a href="/user/{{ message_list[0].writer_id }}">{{ message_list[0].writer }}</a>, {{ message_list[0].sent_at.strftime('%d.%m.%Y klo %H:%M') }}</div>
         <div id="first-message-container">
           <div id="first-message-content" class="first-message collapse lead" aria-expanded="false" aria-controls="first-message-content">{{ line_breaks(message_list[0].content) }}</div>
           <div id="first-message-links" class="buttons d-inline-flex">
@@ -81,7 +81,7 @@
         <div id="message-{{ message.id }}" class="message-item">
           <div class="message-header rounded-top">
             <div class="message-heading">{{ message.heading }}</div>
-            <div class="message-meta">{{ message.sent_at.strftime('%d.%m.%Y klo %H:%M') }}, <a href="#">{{ message.writer }}</a></div>
+            <div class="message-meta">{{ message.sent_at.strftime('%d.%m.%Y klo %H:%M') }}, <a href="/user/{{ message_list[0].writer_id }}">{{ message.writer }}</a></div>
           </div>
           <div class="message-content">{{ line_breaks(message.content) }}</div>
           <div class="message-footer d-inline-flex">
