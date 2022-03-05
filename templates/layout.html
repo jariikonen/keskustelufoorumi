@@ -19,9 +19,6 @@
         <li class="nav-item{% block forum_nav_class %}{% endblock %}">
           <a class="nav-link" href="/topics">Keskustelut</a>
         </li>
-        <li class="nav-item{% block admin_nav_class %}{% endblock %}">
-          <a class="nav-link" href="/admin">Hallinta</a>
-        </li>
         {% if session.username %}
         <li class="nav-item">
           <a class="nav-link" href="/logout{{ return_arg() }}">Kirjaa ulos: <span class="username">{{ session.username }}</span></a>
@@ -35,6 +32,11 @@
         </li>
         <li class="nav-item{% block register_nav_class %}{% endblock %}">
           <a class="nav-link" href="/register{{ return_arg() }}">Rekisteröidy</a>
+        </li>
+        {% endif %}
+        {% if session.user_role == 1 or session.user_role == 2 %}
+        <li class="nav-item{% block admin_nav_class %}{% endblock %}">
+          <a class="nav-link" href="/admin">Hallinta</a>
         </li>
         {% endif %}
       </ul>
