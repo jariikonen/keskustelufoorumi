@@ -2,6 +2,11 @@
   word-break: break-word;
 }
 
+dt, dd {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
 .breadcrumb {
   background-color: white;
   padding: 0;
@@ -127,8 +132,6 @@ th.topic-list-numeric {
   padding-right: 1rem;
 }
 
-/* login.html */
-
 .form-signin {
   width: 100%;
   max-width: 330px;
@@ -136,24 +139,30 @@ th.topic-list-numeric {
   margin: auto;
 }
 
-.form-signin .first {
+.form-edit-user {
+  width: 100%;
+  max-width: 45%;
+  margin: auto;
+}
+
+.form-signin .first, .form-edit-user .first {
   margin-bottom: 3px;
   border-bottom-right-radius: 0;
   border-bottom-left-radius: 0;
 }
 
-.form-signin .middle {
+.form-signin .middle, .form-edit-user .middle {
   margin-bottom: 3px;
   border-radius: 0;
 }
 
-.form-signin .last {
+.form-signin .last, .form-edit-user .last {
   margin-bottom: 10px;
   border-top-left-radius: 0;
   border-top-right-radius: 0;
 }
 
-.form-signin .form-control {
+.form-signin .form-control, .form-edit-user .form-control {
   position: relative;
   box-sizing: border-box;
   height: auto;

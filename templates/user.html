@@ -1,0 +1,47 @@
+{% extends 'layout.html' %}
+{% block title %}Käyttäjätiedot - {{ target.username }}{% endblock %}
+{% block user_nav_class %} active{% endblock %}
+{% block content %}
+    {% if alert_message %}
+      <div class="alert alert-{{ alert_class }} text-center" role="alert">
+        {{ alert_message }}
+      </div>
+    {% endif %}
+    {% if error %}
+      <div class="alert alert-danger text-center" role="alert">
+        {{ error }}
+      </div>
+    {% endif %}
+      <div id="user-data">
+        <h1 class="h3 pt-5 pb-3 mb-3 font-weight-normal text-center">Käyttäjätiedot &ndash; {{ target.username }}</h1>
+        <dl class="row text-left">
+          <dt class="col-6 text-right">Käyttäjänumero:</dt>
+          <dd class="col-6">{{ target.id }}</dd>
+          <dt class="col-6 text-right">Käyttäjänimi:</dt>
+          <dd class="col-6">{{ target.username }}</dd>
+          {% if current_data.is_target or current_data.is_admin %}
+          <dt class="col-6 text-right">Rooli:</dt>
+          <dd class="col-6">{% if target_data.role_super %}Pääkäyttäjä{% elif target_data.role_admin %}Ylläpitäjä{% elif target_data.role_user %}Käyttäjä{% endif %}</dd>
+          <dt class="col-6 text-right">Ryhmäjäsenyydet:</dt>
+          <dd class="col-6">{{ group_str }}</dd>
+          <dt class="col-6 text-right">Rekisteröitynyt:</dt>
+          <dd class="col-6">{{ target.registered_at.strftime('%d.%m.%Y klo %H:%M') }}</dd>
+          {% endif %}
+          {% if (current_data.is_target or current_data.is_admin) and not target_data.role_super %}
+          <dt class="col-6 text-right">Muokkaa käyttäjätietoja:</dt>
+          <dd class="col-6"><a class="btn btn-primary" href="/edit/user/{{ target.id}}">Muokkaa</a></dd>
+          {% endif %}
+          {% if target_data.role_super and current_data.is_super %}
+          <dt class="col-6 text-right">Muokkaa käyttäjätietoja:</dt>
+          <dd class="col-6"><a class="btn btn-primary" href="/edit/user/{{ target.id}}">Muokkaa</a></dd>
+          {% endif %}
+          {% if (current_data.is_target or current_data.is_admin) and not target_data.role_super %}
+          <dt class="col-6 text-right">Poista tili:</dt>
+          <dd class="col-6"><a class="btn btn-danger" href="/delete/user/{{ target.id}}">Poista</a></dd>
+          {% endif %}
+          {% if target_data.role_super and current_data.is_super %}
+          <dt class="col-6 text-right">Poista tili:</dt>
+          <dd class="col-6"><a class="btn btn-danger" href="/delete/user/{{ target.id}}">Poista</a></dd>
+          {% endif %}
+      </div>
+{% endblock %}

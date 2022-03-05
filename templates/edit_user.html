@@ -1,0 +1,70 @@
+{% extends 'layout.html' %}
+{% block title %}Muokkaa käyttäjätietoja - {{ target.username }}{% endblock %}
+{% block user_nav_class %} active{% endblock %}
+{% block content %}
+      <div class="text-center">
+        {% if error %}
+        <div class="alert alert-danger" role="alert">
+          {{ error }}
+        </div>
+        {% endif %}
+        {% if not (current_data.is_admin and not current_data.is_super and target_data.role_super) %}
+        {% if not (not current_data.is_admin and not current_data.is_target) %}
+        <form class="form-edit-user" action="/edit/user/{{ target.id }}" method="POST">
+          {% if current_data.is_target %}
+          <h1 class="h3 pt-5 mb-3 font-weight-normal">Muokkaa käyttäjätietojasi</h1>
+          {% elif current_data.is_admin %}
+          <h1 class="h3 pt-5 mb-3 font-weight-normal">Muokkaa käyttäjän '{{ target.username }}' tietoja</h1>
+          {% endif %}
+          <small class="form-text text-muted mb-2"><strong>HUOM!</strong> Jos et halua vaihtaa salasanaa, jätä uusien salasanojen kentät tyhjiksi</small>
+          {% if current_data.is_target %}
+          <input type="text" class="form-control first" name="username" value="{{ target.username }}" maxlength="{{ max_username }}" required autofocus>
+          {% elif current_data.is_admin %}
+          <input type="hidden" name="username" value="{{ target.username }}">
+          {% endif %}
+          {% if current_data.is_target %}
+          <input type="password" class="form-control middle" name="requester_password" placeholder="Nykyinen salasana" maxlength="{{ max_password }}" required>
+          {% elif current_data.is_admin %}
+          <input type="password" class="form-control first" name="requester_password" placeholder="Salasanasi" maxlength="{{ max_password }}" required autofocus>
+          {% endif %}
+          <input type="password" class="form-control middle" name="new_password1" placeholder="Uusi salasana" maxlength="{{ max_password }}">
+          <input type="password" class="form-control last" name="new_password2" placeholder="Uusi salasana uudelleen" maxlength="{{ max_password }}">
+          {% if current_data.is_admin %}
+          {% if target_data.role_user %}
+          <div class="form-check form-check-inline mt-1 mb-3">
+            <input class="form-check-input" type="radio" name="role" id="newRoleUser" value="3" checked>
+            <label class="form-check-label mr-2" for="newRoleUser">Käyttäjä</label>
+            <input class="form-check-input" type="radio" name="role" id="newRoleAdmin" value="2">
+            <label class="form-check-label mr-2" for="newRoleAdmin">Ylläpitäjä</label>
+            {% if current_data.is_super %}
+            <input class="form-check-input" type="radio" name="role" id="newRoleSuper" value="1">
+            <label class="form-check-label" for="newRoleSuper">Pääkäyttäjä</label>
+            {% endif %}
+          </div>
+          {% elif (target_data.role_admin or target_data.role_super) and current_data.is_super %}
+          <div class="form-check form-check-inline mt-1 mb-3">
+            <input class="form-check-input" type="radio" name="role" id="newRoleUser" value="3">
+            <label class="form-check-label mr-2" for="newRoleUser">Käyttäjä</label>
+            <input class="form-check-input" type="radio" name="role" id="newRoleAdmin" value="2"{% if target_data.role_admin %}checked{% endif %}>
+            <label class="form-check-label mr-2" for="newRoleAdmin">Ylläpitäjä</label>
+            <input class="form-check-input" type="radio" name="role" id="newRoleSuper" value="1"{% if target_data.role_super %}checked{% endif %}>
+            <label class="form-check-label" for="newRoleSuper">Pääkäyttäjä</label>
+          </div>
+          {% else %}
+          <input type="hidden" name="role" value="{{ target_data.role_id }}">
+          {% endif %}
+          {% else %}
+          <input type="hidden" name="role" value="{{ target_data.role_id }}">
+          {% endif %}
+          <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+          <button class="btn btn-lg btn-primary btn-block" type="submit">Muokkaa</button>
+          <a class="btn btn-lg btn-warning btn-block" href="/user/{{ target.id }}">Peru</a>
+        </form>
+        {% else %}
+        <h1 class="h3 pt-5 mb-3 font-weight-normal">Tavallinen käyttäjä ei voi muokata muiden asetuksia</h1>
+        {% endif %}
+        {% else %}
+        <h1 class="h3 pt-5 mb-3 font-weight-normal">Ylläpitäjä ei voi muokata pääkäyttäjän asetuksia</h1>
+        {% endif %}
+      </div>
+{% endblock %}

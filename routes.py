@@ -6,6 +6,7 @@ import topics
 import messages
 import users
 import auth
+import url
 
 @app.route('/')
 def index():
@@ -98,13 +99,17 @@ def register():
         username = request.form['username']
         password1 = request.form['password1']
         password2 = request.form['password2']
-        success, error = users.validate_user_data(username, password1, password2)
-        if not success:
-            return render_template('register.html', error=error)
-        success, error = users.register(username, password1)
-        if success:
+        error_dict = users.validate_user_data(username, password1, password2)
+        if error_dict:
+            return render_template(
+                'register.html', error=error_dict['message']
+            ), error_dict['response_code']
+        error_dict = users.register(username, password1)
+        if not error_dict:
             return redirect(f"/{request.form.get('return_url')}")
-        return render_template('register.html', error=error)
+        return render_template(
+            'register.html', error=error_dict['message']
+        ), error_dict['response_code']
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -282,7 +287,7 @@ def edit_message_get(message_id):
     if not auth.all_has_privilege(message_row.topic_id, PRIVILEGE_READ):
         logout_return = 'topics'
     return render_template(
-        'edit.html', message=message_row, user_id=user_id,
+        'edit_message.html', message=message_row, user_id=user_id,
         referred=referred_row, logout_return=logout_return,
         max_heading=MAX_HEADING, max_content=MAX_CONTENT
     )
@@ -297,7 +302,7 @@ def edit_message_get_with_error(message_id, error, heading, content):
     if not auth.all_has_privilege(message_row.topic_id, PRIVILEGE_READ):
         logout_return = 'topics'
     return render_template(
-        'edit.html', message=message_row, user_id=user_id,
+        'edit_message.html', message=message_row, user_id=user_id,
         referred=referred_row, logout_return=logout_return, error=error,
         heading=heading[:MAX_HEADING], content=content[:MAX_CONTENT],
         max_heading=MAX_HEADING, max_content=MAX_CONTENT
@@ -492,6 +497,107 @@ def restore_message_post(message_id):
     return render_template(
         'error.html', response_code=HTTP_FORBIDDEN, message=error
     ), HTTP_FORBIDDEN
+
+@app.route('/user/<int:user_id>', methods=['GET'])
+def user_get(user_id, error=None):
+    alert_class = request.args.get('alert_class')
+    alert_message = request.args.get('alert_message')
+
+    current_user_data = users.get_current_user_data(target_id=user_id)
+
+    target_row = users.get_user_data(user_id)
+    target_user_data = users.get_target_user_data(target_row)
+
+    group_str = None
+    if target_row and (current_user_data['is_target']\
+            or current_user_data['is_admin']):
+        group_str = users.get_user_groups(user_id)
+
+    if target_row:
+        return render_template(
+            'user.html', target=target_row, group_str=group_str,
+            current_data=current_user_data,
+            target_data=target_user_data,
+            alert_class=alert_class, alert_message=alert_message,
+            error=error
+        )
+    return render_template(
+        'error.html', response_code=HTTP_NOT_FOUND,
+        message='Käyttäjää ei löytynyt'
+    ), HTTP_NOT_FOUND
+
+@app.route('/edit/user/<int:user_id>', methods=['GET'])
+def edit_user_get(user_id, error=None):
+    current_user_data = users.get_current_user_data(user_id)
+    only_super = True
+    if current_user_data['is_super']:
+        other_supers = users.count_other_super(user_id)
+        only_super = False if other_supers > 0 else True
+
+    target_row = users.get_user_data(user_id)
+    if not target_row:
+        return render_template(
+            'error.html', response_code=HTTP_NOT_FOUND,
+            message='Käyttäjää ei löytynyt'
+        ), HTTP_NOT_FOUND
+    target_user_data = users.get_target_user_data(target_row)
+
+    return render_template(
+        'edit_user.html', target=target_row, current_data=current_user_data,
+        target_data=target_user_data, only_super=only_super, error=error,
+        max_username=MAX_USERNAME, max_password=MAX_PASSWORD)
+
+@app.route('/edit/user/<int:user_id>', methods=['POST'])
+def edit_user_post(user_id):
+    if request.form['csrf_token'] != session['csrf_token']:
+        return user_get(
+            user_id, 'Toimenpide ei ole oikeutettu (puuttuva tunniste)'
+        ), HTTP_FORBIDDEN
+
+    if not auth.check_password(
+            session['user_id'], request.form['requester_password']):
+        return edit_user_get(user_id, 'Väärä salasana'), HTTP_FORBIDDEN
+
+    current_user_data = users.get_current_user_data(target_id=user_id)
+    target_row = users.get_user_data(user_id)
+    target_user_data = users.get_target_user_data(target_row)
+    changing_elements_dict = users.find_changing_elements__edit_user(
+        target_user_data, request.form)
+    error_dict = auth.is_authorized__edit_user(
+        current_user_data, target_user_data, changing_elements_dict,
+        request.form)
+    if error_dict:
+        return user_get(
+            user_id, error_dict['message']), error_dict['response_code']
+    
+    error_dict = users.validate_user_data__edit_user(
+        changing_elements_dict, request.form)
+    if error_dict:
+        return user_get(
+            user_id, error_dict['message']), error_dict['response_code']
+
+    error_dict = None
+    if changing_elements_dict['password']:
+        error_dict = users.update_user_data_all(
+            user_id, request.form['username'], request.form['role'],
+            request.form['new_password1'])
+    else:
+        error_dict = users.update_username_and_role(
+            user_id, request.form['username'], request.form['role'])
+    if error_dict:
+        return render_template(
+            'error.html', message=error_dict['message'],
+            response_code=error_dict['response_code']
+        ), error_dict['response_code']
+
+    if changing_elements_dict['username'] and current_user_data['is_target']:
+        session['username'] = request.form['username']
+
+    message = users.get_success_message__edit_user(
+        changing_elements_dict, request.form)
+    return redirect(
+        f'/user/{user_id}?alert_class=success&'\
+            + f'alert_message={url.encode(message)}')
 
 @app.route('/admin', methods=['GET'])
 def admin_get():
