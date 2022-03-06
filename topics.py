@@ -207,6 +207,15 @@ def validate_topic_data(topic_dict):
             'response_code': HTTP_BAD_REQUEST}
 
 def delete_topic(topic_id):
+    sql_delete_from_messages = """
+        DELETE FROM messages WHERE topic_id=:topic_id
+    """
+    sql_delete_group_memberships = """
+        DELETE FROM group_memberships WHERE group_id=(
+            SELECT G.id FROM groups G JOIN topics T
+                ON G.group_name=T.topic
+            WHERE T.id=:topic_id)
+    """
     sql_delete_privileges = """
         DELETE FROM topic_privileges WHERE topic_id=:topic_id
     """
@@ -218,6 +227,8 @@ def delete_topic(topic_id):
         DELETE FROM topics WHERE id=:topic_id
     """
     topic_dict = {'topic_id': topic_id}
+    db.session.execute(sql_delete_from_messages, topic_dict)
+    db.session.execute(sql_delete_group_memberships, topic_dict)
     db.session.execute(sql_delete_privileges, topic_dict)
     db.session.execute(sql_delete_group, topic_dict)
     db.session.execute(sql_delete_topic, topic_dict)
