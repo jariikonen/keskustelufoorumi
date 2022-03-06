@@ -1,6 +1,7 @@
 {% extends 'layout.html' %}
 {% block title %}Muokkaa käyttäjätietoja - {{ target.username }}{% endblock %}
-{% block user_nav_class %} active{% endblock %}
+{% block user_nav_class %}{% if return_url %}{% else %} active{% endif %}{% endblock %}
+{% block admin_nav_class %}{% if return_url %} active{% else %}{% endif %}{% endblock %}
 {% block content %}
       <div class="text-center">
         {% if error %}
@@ -58,7 +59,7 @@
           {% endif %}
           <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
           <button class="btn btn-lg btn-primary btn-block" type="submit">Muokkaa</button>
-          <a class="btn btn-lg btn-warning btn-block" href="/user/{{ target.id }}">Peru</a>
+          <a class="btn btn-lg btn-warning btn-block" href="{% if return_url %}/{{ return_url }}{% else %}/user/{{ target.id }}{% endif %}">Peru</a>
         </form>
         {% else %}
         <h1 class="h3 pt-5 mb-3 font-weight-normal">Tavallinen käyttäjä ei voi muokata muiden asetuksia</h1>

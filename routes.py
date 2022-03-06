@@ -351,7 +351,7 @@ def delete_message_get(message_id):
         'confirmation.html', submit_url=f'/delete/message/{message_row.id}',
         question='Haluatko varmaasti poistaa viestin?',
         target_description=f'Viesti: {message_row.heading}',
-        submit_button_text='Poista', cancel_url=f'/thread/{message_row.thread_id}'
+        submit_button_text='Poista', cancel_url=f'thread/{message_row.thread_id}'
     )
 
 @app.route('/delete/message/<int:message_id>', methods=['POST'])
@@ -408,7 +408,7 @@ def restore_message_get(message_id):
             question='Haluatko varmaasti palauttaa viestin?',
             target_description=f'Viesti: {message_row.heading}',
             submit_button_text='Palauta',
-            cancel_url=f'/thread/{message_row.thread_id}'
+            cancel_url=f'thread/{message_row.thread_id}'
         )
     if (is_writer and not is_admin and deleted_by_writer)\
             or (is_writer and is_admin):
@@ -499,7 +499,7 @@ def restore_message_post(message_id):
 def user__get(user_id, error=None):
     alert_class = request.args.get('alert_class')
     alert_message = request.args.get('alert_message')
-
+    return_url = request.args.get('return_url')
     current_user_data = users.get_current_user_data(target_id=user_id)
 
     target_row = users.get_user_data(user_id)
@@ -521,7 +521,7 @@ def user__get(user_id, error=None):
             current_data=current_user_data,
             target_data=target_user_data,
             alert_class=alert_class, alert_message=alert_message,
-            error=error
+            error=error, return_url=return_url
         )
     return render_template(
         'error.html', response_code=HTTP_NOT_FOUND,
@@ -530,6 +530,7 @@ def user__get(user_id, error=None):
 
 @app.route('/edit/user/<int:user_id>', methods=['GET'])
 def edit_user__get(user_id, error=None):
+    return_url = request.args.get('return_url')
     current_user_data = users.get_current_user_data(user_id)
     only_super = True
     if current_user_data['is_super']:
@@ -547,7 +548,8 @@ def edit_user__get(user_id, error=None):
     return render_template(
         'edit_user.html', target=target_row, current_data=current_user_data,
         target_data=target_user_data, only_super=only_super, error=error,
-        max_username=MAX_USERNAME, max_password=MAX_PASSWORD)
+        max_username=MAX_USERNAME, max_password=MAX_PASSWORD,
+        return_url=return_url)
 
 @app.route('/edit/user/<int:user_id>', methods=['POST'])
 def edit_user_post(user_id):
@@ -610,11 +612,13 @@ def delete_user__get(user_id):
             message='Käyttäjää ei löytynyt'
         ), HTTP_NOT_FOUND
 
+    return_url = request.args.get('return_url')
+    cancel_url = return_url if return_url else f'user/{user_id}'
     return render_template(
         'confirmation.html', submit_url=f'/delete/user/{user_id}',
         question='Haluatko varmaasti poistaa käyttäjätilin?',
         target_description=f'Käyttäjätili: {user_row.username}',
-        submit_button_text='Poista', cancel_url=f'/user/{user_id}'
+        submit_button_text='Poista', cancel_url=cancel_url
     )
 
 @app.route('/delete/user/<int:user_id>', methods=['POST'])
@@ -809,7 +813,7 @@ def delete_topic__get(topic_id):
         'confirmation.html', submit_url=f'/delete/topic/{topic_id}',
         question='Haluatko varmaasti poistaa keskustelualueen?',
         target_description=f'Keskustelualue: {topic_row.topic}',
-        submit_button_text='Poista', cancel_url=f'/admin/topics#form{topic_id}'
+        submit_button_text='Poista', cancel_url=f'admin/topics#form{topic_id}'
     )
 
 @app.route('/delete/topic/<int:topic_id>', methods=['POST'])
@@ -853,9 +857,11 @@ def admin_users__get(error=None):
 
     user_list = users.get_user_list()
     group_list = users.get_group_list()
+    return_url = url.encode('admin/users#user')
     return render_template(
         'admin_users.html', user_list=user_list, group_list=group_list,
-        alert_message=alert_message, alert_class=alert_class, error=error)
+        alert_message=alert_message, alert_class=alert_class, error=error,
+        return_url=return_url)
 
 @app.route('/group_add', methods=['POST'])
 def group_add__post():

@@ -1,6 +1,7 @@
 {% extends 'layout.html' %}
 {% block title %}Käyttäjätiedot - {{ target.username }}{% endblock %}
-{% block user_nav_class %} active{% endblock %}
+{% block user_nav_class %}{% if return_url %}{% else %} active{% endif %}{% endblock %}
+{% block admin_nav_class %}{% if return_url %} active{% else %}{% endif %}{% endblock %}
 {% block content %}
       {% if alert_message %}
       <div class="alert alert-{{ alert_class }} text-center" role="alert">
@@ -45,5 +46,9 @@
           <dd class="col-6"><a class="btn btn-danger" href="/delete/user/{{ target.id}}">Poista</a></dd>
           {% endif %}
           {% endif %}
-      </div>
+          {% if return_url %}
+          <dt class="col-6 text-right"></dt>
+          <dd class="col-6"><a class="btn btn-primary mt-3 mb-5" href="/{{ return_url }}">Takaisin</a></dd>
+          {% endif %}
+        </div>
 {% endblock %}

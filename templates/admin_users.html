@@ -16,16 +16,16 @@
             <th>Toiminnot</th>
           </tr>
           {% for user in user_list %}
-          <tr>
+          <tr id="user{{ user.id }}">
             <td><input type="checkbox" name="user" value="{{ user.id }}"></td>
             <td>{{ user.id }}</td>
             <td>{{ user.username }}</td>
             <td>{% if user.role_id == 1 %}Pääkäyttäjä{% elif user.role_id == 2 %}Ylläpitäjä{% elif user.role_id == 3 %}Käyttäjä{% elif user.role_id == 4 %}Poistettu{% endif %}</td>
             <td>{{ user.registered_at.strftime('%d.%m.%Y klo %H:%M') }}</td>
             <td>
-              <a class="btn btn-sm btn-primary" href="/user/{{ user.id}}">Näytä tiedot</a>
-              <a class="btn btn-sm btn-primary" href="/edit/user/{{ user.id}}">Muokkaa</a>
-              <a class="btn btn-sm btn-danger" href="/delete/user/{{ user.id}}">Poista</a>
+              <a class="btn btn-sm btn-primary" href="/user/{{ user.id}}?return_url={{ return_url }}{{ user.id }}">Näytä tiedot</a>
+              <a class="btn btn-sm btn-primary" href="/edit/user/{{ user.id}}?return_url={{ return_url }}{{ user.id }}">Muokkaa</a>
+              <a class="btn btn-sm btn-danger" href="/delete/user/{{ user.id}}?return_url={{ return_url }}{{ user.id }}">Poista</a>
             </td>
           </tr>
           {% endfor %}
