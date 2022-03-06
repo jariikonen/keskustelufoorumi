@@ -16,8 +16,9 @@ def get_topic(topic_id):
 
 def get_topics_with_privileges():
     sql = """
-        SELECT T.id, T.topic, T.description, TP.know_priv AS group_know,
-            TP.read_priv AS group_read, TP.write_priv AS group_write,
+        SELECT T.id, T.topic, T.description, TP.group_id,
+            TP.know_priv AS group_know, TP.read_priv AS group_read,
+            TP.write_priv AS group_write,
             TP_ALL.know_priv as all_know, TP_ALL.read_priv AS all_read,
             TP_ALL.write_priv AS all_write
         FROM topics T, groups G, topic_privileges TP, topic_privileges TP_ALL
@@ -81,17 +82,19 @@ def get_topic_privileges(topic_id):
     row_list = db.session.execute(sql, {'topic_id': topic_id}).fetchall()
     return get_privilege_dict(row_list)
 
-def get_secret_topics(topic_list, topic_privileges, user_memberships, user_role):
-    secret_topics = []
+def get_secret_topics(topic_list, user_memberships, user_role):
     if user_role == USER_ROLE__USER and len(user_memberships) == 1\
             and GROUP_ID__ALL in user_memberships:
         return None
-    if user_role == USER_ROLE__ADMIN\
-            or user_role == USER_ROLE__SUPER:
-        for topic in topic_list:
-            if GROUP_ID__ALL not in topic_privileges[topic.id]:
-                secret_topics.append(topic)
-        return secret_topics
+    user_is_admin = user_role == USER_ROLE__ADMIN or user_role == USER_ROLE__SUPER
+    secret_topics = []
+    for topic in topic_list:
+        topic_is_secret = topic['all_know'] == False
+        if topic_is_secret and user_is_admin:
+            secret_topics.append(topic)
+        if topic_is_secret and topic.group_id in user_memberships:
+            secret_topics.append(topic)
+    return secret_topics
 
 def get_num_of_threads(topics):
     thread_nums = {}
@@ -232,7 +235,6 @@ def set_privileges(topic_dict):
         WHERE topic_id=:topic_id
             AND group_id=(SELECT id FROM groups WHERE group_name=:topic)
     """
-    print('SET_PRIVILEGES: ', topic_dict)
     topic_dict['group_id_ALL'] = GROUP_ID__ALL
     db.session.execute(sql_all, topic_dict)
     db.session.execute(sql_group, topic_dict)

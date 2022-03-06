@@ -20,19 +20,16 @@ def topic_root():
 def topic_list__both(error=None):
     user_memberships = session.get('memberships', (3,))
     user_role = session.get('user_role')
-    topic_list = topics.get_topics()
-    print('TOPIC_LIST__GET: ', topic_list)
-    topic_privileges = topics.get_all_topic_privileges()
+    topic_list = topics.get_topics_with_privileges()
     secret_topics = topics.get_secret_topics(
-        topic_list, topic_privileges, user_memberships, user_role)
+        topic_list, user_memberships, user_role)
     thread_nums = topics.get_num_of_threads(topic_list)
     message_nums = topics.get_num_of_messages(topic_list)
     latest_message_times = topics.get_time_of_latest_message(topic_list)
     return render_template(
         'topic-list.html', topic_list=topic_list, secret_topics=secret_topics,
-        tpriv=topic_privileges, thread_nums=thread_nums,
-        message_nums=message_nums, latest_message_times=latest_message_times,
-        error=error
+        thread_nums=thread_nums, message_nums=message_nums,
+        latest_message_times=latest_message_times, error=error
     )
 
 @app.route('/topic/<int:topic_id>')

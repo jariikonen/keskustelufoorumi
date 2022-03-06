@@ -31,7 +31,7 @@
             <th class="topic-list-timestamp">Uusin viesti</th>
           </tr>
           {% for topic in topic_list %}
-          {% if 3 in tpriv[topic.id] and tpriv[topic.id][3]['know'] and tpriv[topic.id][3]['read'] and tpriv[topic.id][3]['write'] %}
+          {% if topic.all_know and topic.all_read and topic.all_write %}
           <tr>
             <td class="topic-list-description">
               <div class="list-item">
@@ -58,7 +58,7 @@
             <th class="topic-list-timestamp">Uusin viesti</th>
           </tr>
           {% for topic in topic_list %}
-          {% if 3 in tpriv[topic.id] and tpriv[topic.id][3]['know'] and (not tpriv[topic.id][3]['read'] or not tpriv[topic.id][3]['write']) %}
+          {% if topic.all_know and (not topic.all_read or not topic.all_write) %}
           <tr>
             <td class="topic-list-description">
               <div class="list-item">
