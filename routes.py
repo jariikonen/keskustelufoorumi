@@ -616,7 +616,7 @@ def delete_user__get(user_id):
     cancel_url = return_url if return_url else f'user/{user_id}'
     return render_template(
         'confirmation.html', submit_url=f'/delete/user/{user_id}',
-        question='Haluatko varmaasti poistaa käyttäjätilin?',
+        question='Haluatko varmasti poistaa käyttäjätilin?',
         target_description=f'Käyttäjätili: {user_row.username}',
         submit_button_text='Poista', cancel_url=cancel_url
     )
