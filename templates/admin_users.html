@@ -1,9 +1,45 @@
 {% extends 'admin_layout.html' %}
 {% block users_sub_nav_class %} active{% endblock %}
+{% block alert_class %}{{ alert_class }}{% endblock %}
+{% block alert_message %}{{ alert_message }}{% endblock %}
 {% block inner_content %}
-      <!-- Käyttäjätilien hallinta -->
       <h3 class="font-weight-normal mt-5 mb-3">Käyttäjätilien hallinta</h3>
-
-      <!-- Käyttäjien lisääminen ryhmiin -->
-      <h3 class="font-weight-normal mt-5 mb-3">Ryhmäjäsenyydet</h3>
+      <form action="/group_add" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+        <table class="table table-light">
+          <tr>
+            <th>Valitse</th>
+            <th>ID</th>
+            <th>Käyttäjänimi</th>
+            <th>Rooli</th>
+            <th>Rekisteröitynyt</th>
+            <th>Toiminnot</th>
+          </tr>
+          {% for user in user_list %}
+          <tr>
+            <td><input type="checkbox" name="user" value="{{ user.id }}"></td>
+            <td>{{ user.id }}</td>
+            <td>{{ user.username }}</td>
+            <td>{% if user.role_id == 1 %}Pääkäyttäjä{% elif user.role_id == 2 %}Ylläpitäjä{% elif user.role_id == 3 %}Käyttäjä{% elif user.role_id == 4 %}Poistettu{% endif %}</td>
+            <td>{{ user.registered_at.strftime('%d.%m.%Y klo %H:%M') }}</td>
+            <td>
+              <a class="btn btn-sm btn-primary" href="/user/{{ user.id}}">Näytä tiedot</a>
+              <a class="btn btn-sm btn-primary" href="/edit/user/{{ user.id}}">Muokkaa</a>
+              <a class="btn btn-sm btn-danger" href="/delete/user/{{ user.id}}">Poista</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </table>
+        <div class="form-inline mb-5">
+          <div class="form-group mr-3">
+            <label for="selectGroup" class="mr-3">Lisää valitut käyttäjät ryhmään:</label>
+            <select class="form-control" name="group" id="selectGroup">
+              {% for group in group_list %}
+              <option value="{{ group.id }}">{{ group.group_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button class="btn btn-primary" type="submit">Lisää käyttäjät ryhmään</button>
+        </div>
+      </form>
 {% endblock %}

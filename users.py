@@ -243,3 +243,26 @@ def delete_user(user_id):
         db.session.rollback()
         create_pending_delete(user_id)
     db.session.commit()
+
+def get_user_list():
+    sql = 'SELECT id, username, role_id, registered_at FROM users'
+    return db.session.execute(sql).fetchall()
+
+def get_group_list():
+    sql = 'SELECT id, group_name FROM groups WHERE id NOT IN (1,2,3)'
+    return db.session.execute(sql).fetchall()
+
+def group_add(user_list, group):
+    sql = """
+        INSERT INTO group_memberships (group_id, user_id)
+        VALUES (:group_id, :user_id)
+    """
+    for user in user_list:
+        try:
+            db.session.execute(sql, {'group_id': group, 'user_id': user})
+        except IntegrityError:
+            db.session.rollback()
+            return {
+                'message': f'Käyttäjää ({user}) tai ryhmää ({group}) ei ole',
+                'response_code': HTTP_NOT_FOUND}
+    db.session.commit()

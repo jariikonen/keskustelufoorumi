@@ -21,6 +21,7 @@ def topic_list__both(error=None):
     user_memberships = session.get('memberships', (3,))
     user_role = session.get('user_role')
     topic_list = topics.get_topics()
+    print('TOPIC_LIST__GET: ', topic_list)
     topic_privileges = topics.get_all_topic_privileges()
     secret_topics = topics.get_secret_topics(
         topic_list, topic_privileges, user_memberships, user_role)
@@ -840,7 +841,9 @@ def delete_topic__post(topic_id):
         f'/admin/topics?alert_message={message}&alert_class=success')
 
 @app.route('/admin/users', methods=['GET'])
-def admin_users__get():
+def admin_users__get(error=None):
+    alert_message = request.args.get('alert_message')
+    alert_class = request.args.get('alert_class')
     if 'username' not in session:
         return render_template('login.html', return_url='admin')
 
@@ -851,7 +854,36 @@ def admin_users__get():
             + 'hallintapaneelia'
         return topic_list__both(message), response_code
 
-    return render_template('admin_users.html')
+    user_list = users.get_user_list()
+    group_list = users.get_group_list()
+    return render_template(
+        'admin_users.html', user_list=user_list, group_list=group_list,
+        alert_message=alert_message, alert_class=alert_class, error=error)
+
+@app.route('/group_add', methods=['POST'])
+def group_add__post():
+    user_role = session.get('user_role')
+    if user_role != USER_ROLE__ADMIN and user_role != USER_ROLE__SUPER:
+        response_code = HTTP_FORBIDDEN
+        message = 'Vain ylläpitäjät ja pääkäyttäjät saavat lisätä '\
+            + 'käyttäjiä ryhmiin'
+        return topic_list__both(message), response_code
+
+    csrf_token = request.form.get('csrf_token')
+    if csrf_token != session['csrf_token']:
+        error = 'Toimenpide ei ole oikeutettu (puuttuva tunniste)'
+        return admin_users__get(error), HTTP_FORBIDDEN
+
+    user_list = request.form.getlist('user')
+    group_id = request.form.get('group')
+    error_dict = users.group_add(user_list, group_id)
+    if error_dict:
+        error = f'Lisääminen ei onnistunut: {error_dict["message"]}'
+        return admin_users__get(error), HTTP_FORBIDDEN
+    message = url.encode(
+        f'Käyttäjien {user_list} lisääminen ryhmään {group_id} onnistui')
+    return redirect(
+        f'/admin/users?alert_message={message}&alert_class=success')
 
 @app.route('/admin/deletions', methods=['GET'])
 def admin_deletions__get():

@@ -135,7 +135,7 @@
           <td>
             <input form="form{{ topic.id }}" type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
             <a class="btn btn-sm btn-primary mb-2 mr-1" href="/edit/topic/{{ topic.id }}?return_url={{ return_url }}{{ topic.id }}">Lisäasetukset</a>
-            <button form="form{{ topic.id }}"  class="btn btn-sm btn-primary mb-2 mr-1" type="submit">Aseta oikeudet</button>
+            <button form="form{{ topic.id }}" class="btn btn-sm btn-primary mb-2 mr-1" type="submit">Aseta oikeudet</button>
             <a class="btn btn-sm btn-danger mb-2" href="/delete/topic/{{ topic.id }}">Poista</a>
           </td>
         </tr>
