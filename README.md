@@ -17,7 +17,7 @@ Sovelluksen toiminnallisuuksia (alustava lista):
 * Käyttäjä voi (kirjauduttuaan sisään) muokata luomansa ketjun otsikkoa sekä lähettämänsä viestin sisältöä (**toteutettu**). Käyttäjä voi myös poistaa ketjun tai viestin (*tämä vielä toteuttamatta*).
 * Käyttäjä voi etsiä kaikki viestit, joiden osana on annettu sana. (*vielä toteuttamatta*)
 * Ylläpitäjä voi lisätä ja poistaa keskustelualueita. (**toteutettu**)
-* Ylläpitäjä voi luoda salaisen alueen ja määrittää, keillä käyttäjillä on pääsy alueelle. (**toteutettu osittain**; toiminnallisuuden mahdollistavat käyttöoikeusrakenteet (käyttäjäroolit ja keskustelualueisiin liitettävät käyttöoikeudet) on toteutettu, mutta ylläpitäjä ei voi vielä muokata lisättävän keskustelualueen käyttöoikeuksia)
+* Ylläpitäjä voi luoda salaisen alueen ja määrittää, keillä käyttäjillä on pääsy alueelle. (**toteutettu**)
 
 ## Välipalautus 2
 
@@ -35,20 +35,30 @@ Toteutin sovellukseen käyttöoikeusjärjestelmän, jossa on kolme käyttäjäro
 
 Lopulliseen sovellukseen on tarkoitus toteuttaa vielä mahdollisuuksien mukaan seuraavia toiminnallisuuksia:
 
-* Käyttäjät (user) voivat poistaa kirjoittamansa viestit. Tällöin viestin sisältö tyhjennetään ja viestin tietoihin asetetaan poistettu lippu. Tämän jälkeen viesti näkyy listauksissa poistettuna (ts. sen tiedoissa lukee 'poistettu').
-* Käyttäjät voivat vaihtaa oman käyttäjätunnuksensa ja salasanansa.
+* Käyttäjät (user) voivat poistaa kirjoittamansa viestit. Tällöin viestin sisältö tyhjennetään ja viestin tietoihin asetetaan poistettu lippu. Tämän jälkeen viesti näkyy listauksissa poistettuna (ts. sen tiedoissa lukee 'poistettu'). (**toteutettu**)
+* Käyttäjät voivat vaihtaa oman käyttäjätunnuksensa ja salasanansa. (**toteutettu**)
 * Käyttäjät voivat poistaa omat tietonsa (käyttäjätunnus ja salasana) järjestelmästä. Jos järjestelmässä on edelleen käyttäjän kirjoittamia viestejä, poistamisesta seuraa, että käyttäjän tietoihin tehdään merkintä tilin poistosta, jonka jälkeen tilille ei voi enää kirjautua. (Jos järjestelmässä olisi käyttäjästä henkilökohtaisia tietoja, nämä tietenkin poistettaisiin samalla.) Jos käyttäjän kirjoittamia viestejä ei ole, poistetaan käyttäjätunnus kokonaan järjestelmästä.
-* Ylläpitäjät (admin) voivat poistaa mitä tahansa viestejä siten, että niiden 'poistettu'-lippu nostetaan, mutta viestin sisältöä ei poisteta. Viestit näytetään tällöin listauksissa poistettuina.
+* Ylläpitäjät (admin) voivat poistaa mitä tahansa viestejä siten, että niiden 'poistettu'-lippu nostetaan, mutta viestin sisältöä ei poisteta. Viestit näytetään tällöin listauksissa poistettuina. (**toteutettu**)
 * Ylläpitäjät voivat poistaa kokonaisen viestiketjun tai keskustelualueen siten, että viestit asetetaan poistetuiksi, mutta niitä ei poisteta tietokannasta. Ketju asetetaan tällöin myös käyttäjille näkymättömäksi.
 * Ylläpitäjät (ja pääkäyttäjät) voivat jäädyttää ketjun / keskustelualueen siten, että sille ei voi kirjoittaa uusia viestejä, eikä sillä olevia viestejä voi muokata.
-* Ylläpitäjät (ja pääkäyttäjät) voivat vaihtaa käyttäjän salasanan.
-* Ylläpitäjät voivat korottaa käyttäjän ylläpitäjäksi.
-* Ylläpitäjät voivat poistaa käyttäjän siten, että tili asetetaan poistetuksi, mutta tietoja ei poisteta.
+* Ylläpitäjät (ja pääkäyttäjät) voivat vaihtaa käyttäjän salasanan. (**toteutettu**)
+* Ylläpitäjät voivat korottaa käyttäjän ylläpitäjäksi. (**toteutettu**)
+* Ylläpitäjät voivat poistaa käyttäjän siten, että tili asetetaan poistetuksi, mutta tietoja ei poisteta. 
 * Pääkäyttäjät voivat poistaa viestiketjun tai keskustelualueen kokonaan siten, että viestit poistetaan kokonaan tietokannasta.
-* Pääkäyttäjät voivat poistaa käyttäjiä siten, että tiedot poistetaan myös tietokannasta. Tällöin käyttäjällä ei kuitenkaan saa olla viestejä tietokannassa.
-* Pääkäyttäjät voivat tehdä käyttäjistä ja ylläpitäjistä pääkäyttäjiä.
-* Pääkäyttäjät voivat poistaa ylläpitäjiä.
+* Pääkäyttäjät voivat poistaa käyttäjiä siten, että tiedot poistetaan myös tietokannasta. Tällöin käyttäjällä ei kuitenkaan saa olla viestejä tietokannassa. (**toteutettu**)
+* Pääkäyttäjät voivat tehdä käyttäjistä ja ylläpitäjistä pääkäyttäjiä. (**toteutettu**)
+* Pääkäyttäjät voivat poistaa ylläpitäjiä. (**toteutettu**)
 
 Sovellusta voi edelleen testata Herokussa osoitteessa https://mysterious-ravine-44883.herokuapp.com/.
 
 Huom! Järjestelmässä on valmiina kaksi tiliä ylläpitäjä (tunnus:admin, salasana: 12345) ja pääkäyttäjä (tunnus: super, salasana: 12345).
+
+## Loppupalautus
+
+Merkitsin viimeisen palautuksen jälkeen toteuttamani uudet toiminnallisuudet edellisen välipalautuksen yhteydessä tekemääni listaan (yllä).
+
+Viestien ja käyttäjien poistamisessa periaatteena on, että ne poistetaan tietokannasta, jos niihin ei ole tietokannassa viitteitä. Jos viitteitä (kirjoitettuja tai viittaavia viestejä) on, viestit tai käyttäjät jäävät tietokantaan, mutta ne merkitään poistetuiksi. Tällöin käyttäjätilille ei enää voi kirjautua ja viestit näytetään listauksissa poistettuina. Poistetun viestin voi vielä palauttaa, mutta käyttäjän itse poistaessa viestin sen sisältö tyhjennetään. Jos käyttäjä siis haluaa palauttaa poistamansa viestin, on hänen kirjoitettava sille uusi sisältö (myönnetään, että tämä on ehkä hieman outo ratkaisu). Ylläpidon palauttaessa viestin, on viestin sisältö tallessa. Ylläpito ei kuitenkaan voi palauttaa käyttäjän itsensä poistamaa viestiä.
+
+Hakua en ehtinyt toteuttaa, mutta en raatsinut poistaa sitä ulkoasusta.
+
+Sovellusta voi edelleen testata Herokussa osoitteessa https://mysterious-ravine-44883.herokuapp.com/.
