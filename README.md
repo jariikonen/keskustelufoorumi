@@ -55,9 +55,9 @@ Huom! Järjestelmässä on valmiina kaksi tiliä ylläpitäjä (tunnus:admin, sa
 
 ## Loppupalautus
 
-Merkitsin viimeisen palautuksen jälkeen toteuttamani uudet toiminnallisuudet edellisen välipalautuksen yhteydessä tekemääni listaan (yllä).
+Merkitsin viimeisen palautuksen jälkeen toteuttamani uudet toiminnallisuudet edellisen välipalautuksen yhteydessä tekemääni listaan (yllä). Keskeisimmät muutokset ovat, että nyt keskustelualueiden oikeuksia voi muuttaa ja niiden ryhmiin voi lisätä käyttäjiä. Näin erilaisia käyttöoikeuksia pääsee oikeasti testaamaan. Lisäksi käyttäjien tietoja voi katsella, niitä voi muokata ja tilejä voi poistaa.
 
-Viestien ja käyttäjien poistamisessa periaatteena on, että ne poistetaan tietokannasta, jos niihin ei ole tietokannassa viitteitä. Jos viitteitä (kirjoitettuja tai viittaavia viestejä) on, viestit tai käyttäjät jäävät tietokantaan, mutta ne merkitään poistetuiksi. Tällöin käyttäjätilille ei enää voi kirjautua ja viestit näytetään listauksissa poistettuina. Poistetun viestin voi vielä palauttaa, mutta käyttäjän itse poistaessa viestin sen sisältö tyhjennetään. Jos käyttäjä siis haluaa palauttaa poistamansa viestin, on hänen kirjoitettava sille uusi sisältö (myönnetään, että tämä on ehkä hieman outo ratkaisu). Ylläpidon palauttaessa viestin, on viestin sisältö tallessa. Ylläpito ei kuitenkaan voi palauttaa käyttäjän itsensä poistamaa viestiä.
+Viestien ja käyttäjien poistamisessa periaatteena on, että ne poistetaan tietokannasta jos niihin ei ole tietokannassa viitteitä. Jos viitteitä (kirjoitettuja tai viittaavia viestejä) on, viestit tai käyttäjät jäävät tietokantaan, mutta ne merkitään poistetuiksi. Tällöin käyttäjätilille ei enää voi kirjautua ja viestit näytetään listauksissa poistettuina. Poistetun viestin voi vielä palauttaa, mutta käyttäjän itse poistaessa viestin sen sisältö tyhjennetään. Jos käyttäjä siis haluaa palauttaa poistamansa viestin, on hänen kirjoitettava sille uusi sisältö (myönnetään, että tämä on ehkä hieman outo ratkaisu). Ylläpidon palauttaessa viestin, on viestin sisältö tallessa. Ylläpito ei kuitenkaan voi palauttaa käyttäjän itsensä poistamaa viestiä. Käyttäjä ei myöskään voi palauttaa ylläpidon poistamaa viestiä.
 
 Hakua en ehtinyt toteuttaa, mutta en raatsinut poistaa sitä ulkoasusta.
 
