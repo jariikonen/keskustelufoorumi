@@ -652,7 +652,8 @@ def delete_user__post(user_id):
                 'pääkäyttäjä'
         ), HTTP_FORBIDDEN
 
-    auth.logout()
+    if current_user_data['is_target']:
+        auth.logout()
     users.delete_user(user_id)
     message = f'Käyttäjätili {target_row.username} poistettu'
     return redirect(
@@ -887,17 +888,3 @@ def group_add__post():
         f'Käyttäjien {user_list} lisääminen ryhmään {group_id} onnistui')
     return redirect(
         f'/admin/users?alert_message={message}&alert_class=success')
-
-@app.route('/admin/deletions', methods=['GET'])
-def admin_deletions__get():
-    if 'username' not in session:
-        return render_template('login.html', return_url='admin')
-
-    user_role = session.get('user_role')
-    if user_role != USER_ROLE__ADMIN and user_role != USER_ROLE__SUPER:
-        response_code = HTTP_FORBIDDEN
-        message = 'Vain ylläpitäjät ja pääkäyttäjät saavat käyttää '\
-            + 'hallintapaneelia'
-        return topic_list__both(message), response_code
-
-    return render_template('admin_deletions.html')
