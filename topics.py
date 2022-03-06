@@ -92,7 +92,7 @@ def get_secret_topics(topic_list, user_memberships, user_role):
         topic_is_secret = topic['all_know'] == False
         if topic_is_secret and user_is_admin:
             secret_topics.append(topic)
-        if topic_is_secret and topic.group_id in user_memberships:
+        elif topic_is_secret and topic.group_id in user_memberships:
             secret_topics.append(topic)
     return secret_topics
 
