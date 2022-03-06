@@ -44,7 +44,7 @@ def logout():
 
 def has_privilege(topic_id, privilege):
     topic_privileges = topics.get_topic_privileges(topic_id)[int(topic_id)]
-    role = session.get('role')
+    role = session.get('user_role')
     user_memberships = session.get('memberships', (GROUP_ID__ALL,))
     if role == USER_ROLE__SUPER or role == USER_ROLE__ADMIN:
         return topic_privileges

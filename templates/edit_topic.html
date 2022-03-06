@@ -1,0 +1,84 @@
+{% extends 'layout.html' %}
+{% block title %}Muokkaa keskustelualuetta - {{ topic.topic }}{% endblock %}
+{% block admin_nav_class %} active{% endblock %}
+{% block content %}
+      {% if error %}
+      <div class="text-center">
+        <div class="alert alert-danger" role="alert">
+          {{ error }}
+        </div>
+      </div>
+      {% endif %}
+      <h3 class="font-weight-normal mt-5 mb-3">Muokkaa keskustelualuetta</h3>
+      <form action="/edit/topic/{{ topic.id }}" method="POST">
+        <div class="form-group row">
+          <label for="inputTopic" class="col-2 col-form-label">Nimi</label>
+          <div class="col-10">
+            <input type="text" class="form-control" name="topic" id="inputTopic" value="{% if topic_dict %}{{ topic_dict.topic }}{% else %}{{ topic.topic }}{% endif %}" autofocus>
+          </div>
+        </div>
+        <div class="form-group row">
+          <label for="inputDescription" class="col-2 col-form-label">Kuvaus</label>
+          <div class="col-10">
+            <textarea class="form-control" name="description" rows="3" id="inputDescription">{% if topic_dict %}{{ topic_dict.description }}{% else %}{{ topic.description }}{% endif %}</textarea>
+          </div>
+        </div>
+        <fieldset class="form-group">
+          <div class="row">
+            <legend class="col-form-label col-2 pt-0">Oikeudet/kaikki</legend>
+            <div class="col-10">
+              <div class="form-check-inline">
+                <input class="form-check-input" type="checkbox" name="privileges_all_know" id="privilegesAll1" value="true"{% if topic_dict and topic_dict.all_know %} checked{% elif topic_dict and not topic_dict.all_know %}{% elif not topic_dict and topic.all_know %} checked{% elif not topic_dict and not topic.all_know %}{% endif %}>
+                <label class="form-check-label" for="privilegesAll1">
+                  Tietää
+                </label>
+              </div>
+              <div class="form-check-inline">
+                <input class="form-check-input" type="checkbox" name="privileges_all_read" id="privilegesAll2" value="true"{% if topic_dict and topic_dict.all_read %} checked{% elif topic_dict and not topic_dict.all_read %}{% elif not topic_dict and topic.all_read %} checked{% elif not topic_dict and not topic.all_read %}{% endif %}>
+                <label class="form-check-label" for="privilegesAll2">
+                  Lukea
+                </label>
+              </div>
+              <div class="form-check-inline">
+                <input class="form-check-input" type="checkbox" name="privileges_all_write" id="privilegesAll3" value="true"{% if topic_dict and topic_dict.all_write %} checked{% elif topic_dict and not topic_dict.all_write %}{% elif not topic_dict and topic.all_write %} checked{% elif not topic_dict and not topic.all_write %}{% endif %}>
+                <label class="form-check-label" for="privilegesAll3">
+                  Kirjoittaa
+                </label>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+        <fieldset class="form-group">
+          <div class="row">
+            <legend class="col-form-label col-2 pt-0">Oikeudet/ryhmä</legend>
+            <div class="col-10">
+              <div class="form-check-inline">
+                <input class="form-check-input" type="checkbox" name="privileges_group_know" id="privilegesGroup1" value="true"{% if topic_dict and topic_dict.group_know %} checked{% elif topic_dict and not topic_dict.group_know %}{% elif not topic_dict and topic.group_know %} checked{% elif not topic_dict and not topic.group_know %}{% endif %}>
+                <label class="form-check-label" for="privilegesGroup1">
+                  Tietää
+                </label>
+              </div>
+              <div class="form-check-inline">
+                <input class="form-check-input" type="checkbox" name="privileges_group_read" id="privilegesGroup2" value="true"{% if topic_dict and topic_dict.group_read %} checked{% elif topic_dict and not topic_dict.group_read %}{% elif not topic_dict and topic.group_read %} checked{% elif not topic_dict and not topic.group_read %}{% endif %}>
+                <label class="form-check-label" for="privilegesGroup2">
+                  Lukea
+                </label>
+              </div>
+              <div class="form-check-inline">
+                <input class="form-check-input" type="checkbox" name="privileges_group_write" id="privilegesGroup3" value="true"{% if topic_dict and topic_dict.group_write %} checked{% elif topic_dict and not topic_dict.group_write %}{% elif not topic_dict and topic.group_write %} checked{% elif not topic_dict and not topic.group_write %}{% endif %}>
+                <label class="form-check-label" for="privilegesGroup3">
+                  Kirjoittaa
+                </label>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+        <div class="form-group row">
+          <div class="col-12">
+            <button type="submit" class="btn btn-primary mr-2">Muokkaa</button>
+            <a class="btn btn-warning" href="/{{ return_url }}">Peru</a>
+          </div>
+        </div>
+      </form>
+{% endblock %}

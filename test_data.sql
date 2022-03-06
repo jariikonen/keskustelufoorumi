@@ -30,6 +30,9 @@ INSERT INTO groups (group_name) VALUES ('Salainen keskustelualue');
 /* Yleinen keskustelualue - ALL */
 INSERT INTO topic_privileges (group_id, topic_id, know_priv, read_priv, write_priv)
 VALUES (3, 1, true, true, true);
+/* Yleinen keskustelualue - Yleinen keskustelualue */
+INSERT INTO topic_privileges (group_id, topic_id, know_priv, read_priv, write_priv)
+VALUES (4, 1, true, true, true);
 
 /* Rajoitettu keskustelualue - ALL */
 INSERT INTO topic_privileges (group_id, topic_id, know_priv, read_priv, write_priv)
@@ -45,6 +48,9 @@ VALUES (3, 3, true, false, false);
 INSERT INTO topic_privileges (group_id, topic_id, know_priv, read_priv, write_priv)
 VALUES (6, 3, true, true, true);
 
+/* Salainen keskustelualue - ALL */
+INSERT INTO topic_privileges (group_id, topic_id, know_priv, read_priv, write_priv)
+VALUES (3, 4, false, false, false);
 /* Salainen keskustelualue - Salainen keskustelualue */
 INSERT INTO topic_privileges (group_id, topic_id, know_priv, read_priv, write_priv)
 VALUES (7, 4, true, true, true);

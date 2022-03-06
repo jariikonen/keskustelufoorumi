@@ -1,0 +1,31 @@
+{% extends 'layout.html' %}
+{% block title %}Hallinta{% endblock %}
+{% block admin_nav_class %} active{% endblock %}
+{% block content %}
+      <!-- Navigointi -->
+      <h1 class="mt-4 mb-4">Hallintapaneeli</h1>
+      <ul class="nav nav-tabs mt-4 mb-3">
+        <li class="nav-item">
+          <a class="nav-link{% block topics_sub_nav_class %}{% endblock %}" href="/admin/topics">Keskustelualueet</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link{% block users_sub_nav_class %}{% endblock %}" href="/admin/users">Käyttäjät</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link{% block deletions_sub_nav_class %}{% endblock %}" href="/admin/deletions">Poistot</a>
+        </li>
+      </ul>
+
+      {% if alert_message %}
+      <div class="alert alert-{% block alert_class %}{% endblock %} text-center" role="alert">
+        {% block alert_message %}{% endblock %}
+      </div>
+      {% endif %}
+      {% if error %}
+      <div class="alert alert-danger text-center" role="alert">
+        {{ error }}
+      </div>
+      {% endif %}
+
+      {% block inner_content %}{% endblock %}
+{% endblock %}

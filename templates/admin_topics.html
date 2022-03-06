@@ -1,0 +1,144 @@
+{% extends 'admin_layout.html' %}
+{% block topics_sub_nav_class %} active{% endblock %}
+{% block alert_class %}{{ alert_class }}{% endblock %}
+{% block alert_message %}{{ alert_message }}{% endblock %}
+{% block inner_content %}
+      <!-- Uusi keskustelualue -->
+      <h3 class="font-weight-normal mt-5 mb-3">Lisää uusi keskustelualue</h3>
+      <form action="/new/topic" method="POST">
+        <div class="form-group row">
+          <label for="inputTopic" class="col-2 col-form-label">Nimi</label>
+          <div class="col-10">
+            <input type="text" class="form-control" name="topic" id="inputTopic" value="{% if topic_dict %}{{ topic_dict.topic }}{% endif %}">
+          </div>
+        </div>
+        <div class="form-group row">
+          <label for="inputDescription" class="col-2 col-form-label">Kuvaus</label>
+          <div class="col-10">
+            <textarea class="form-control" name="description" rows="3" id="inputDescription">{% if topic_dict %}{{ topic_dict.description }}{% endif %}</textarea>
+          </div>
+        </div>
+        <fieldset class="form-group">
+          <div class="row">
+            <legend class="col-form-label col-2 pt-0">Oikeudet/kaikki</legend>
+            <div class="col-10">
+              <div class="form-check-inline">
+                <input class="form-check-input" type="checkbox" name="privileges_all_know" id="privilegesAll1" value="true"{% if topic_dict and topic_dict.all_know %} checked{% elif topic_dict and not topic_dict.all_know %}{% else %} checked{% endif %}>
+                <label class="form-check-label" for="privilegesAll1">
+                  Tietää
+                </label>
+              </div>
+              <div class="form-check-inline">
+                <input class="form-check-input" type="checkbox" name="privileges_all_read" id="privilegesAll2" value="true"{% if topic_dict and topic_dict.all_read %} checked{% elif topic_dict and not topic_dict.all_read %}{% else %} checked{% endif %}>
+                <label class="form-check-label" for="privilegesAll2">
+                  Lukea
+                </label>
+              </div>
+              <div class="form-check-inline">
+                <input class="form-check-input" type="checkbox" name="privileges_all_write" id="privilegesAll3" value="true"{% if topic_dict and topic_dict.all_write %} checked{% elif topic_dict and not topic_dict.all_write %}{% else %} checked{% endif %}>
+                <label class="form-check-label" for="privilegesAll3">
+                  Kirjoittaa
+                </label>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+        <fieldset class="form-group">
+          <div class="row">
+            <legend class="col-form-label col-2 pt-0">Oikeudet/ryhmä</legend>
+            <div class="col-10">
+              <div class="form-check-inline">
+                <input class="form-check-input" type="checkbox" name="privileges_group_know" id="privilegesGroup1" value="true"{% if topic_dict and topic_dict.group_know %} checked{% elif topic_dict and not topic_dict.group_know %}{% else %} checked{% endif %}>
+                <label class="form-check-label" for="privilegesGroup1">
+                  Tietää
+                </label>
+              </div>
+              <div class="form-check-inline">
+                <input class="form-check-input" type="checkbox" name="privileges_group_read" id="privilegesGroup2" value="true"{% if topic_dict and topic_dict.group_read %} checked{% elif topic_dict and not topic_dict.group_read %}{% else %} checked{% endif %}>
+                <label class="form-check-label" for="privilegesGroup2">
+                  Lukea
+                </label>
+              </div>
+              <div class="form-check-inline">
+                <input class="form-check-input" type="checkbox" name="privileges_group_write" id="privilegesGroup3" value="true"{% if topic_dict and topic_dict.group_write %} checked{% elif topic_dict and not topic_dict.group_write %}{% else %} checked{% endif %}>
+                <label class="form-check-label" for="privilegesGroup3">
+                  Kirjoittaa
+                </label>
+              </div>
+            </div>
+          </div>
+        </fieldset>
+        <input type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+        <div class="form-group row">
+          <div class="col-12">
+            <button type="submit" class="btn btn-primary">Lisää keskustelualue</button>
+          </div>
+        </div>
+      </form>
+
+      <!-- Keskustelualueiden hallinta -->
+      <h3 class="font-weight-normal mt-5">Keskustelualueiden hallinta</h3>
+      <table class="table table-light mb-5">
+        <tr>
+          <th>Keskustelualue</th>
+          <th>Oikeudet/kaikki</th>
+          <th>Oikeudet/ryhmä</th>
+          <th>Toiminnot</th>
+        </tr>
+        {% for topic in topic_list %}
+        <tr>
+          <td><form id="form{{ topic.id }}" action="/set_privileges/topic/{{ topic.id }}" method="POST"><input form="form{{ topic.id }}" type="text" readonly class="form-control-plaintext" name="topic" value="{{ topic.topic }}"></form></td>
+          <td>
+            <fieldset class="">
+              <div class="form-check-inline">
+                <input form="form{{ topic.id }}" class="form-check-input" type="checkbox" name="privileges_all_know" id="privAll1" value="true"{% if topic.all_know %} checked{% endif %}>
+                <label class="form-check-label" for="privAll1">
+                  T
+                </label>
+              </div>
+              <div class="form-check-inline">
+                <input form="form{{ topic.id }}" class="form-check-input" type="checkbox" name="privileges_all_read" id="privAll2" value="true"{% if topic.all_read %} checked{% endif %}>
+                <label class="form-check-label" for="privAll2">
+                  L
+                </label>
+              </div>
+              <div class="form-check-inline disabled">
+                <input form="form{{ topic.id }}" class="form-check-input" type="checkbox" name="privileges_all_write" id="privAll3" value="true"{% if topic.all_write %} checked{% endif %}>
+                <label class="form-check-label" for="privAll3">
+                  K
+                </label>
+              </div>
+            </fieldset>
+          </td>
+          <td>
+            <fieldset class="">
+              <div class="form-check-inline">
+                <input form="form{{ topic.id }}" class="form-check-input" type="checkbox" name="privileges_group_know" id="privGroup1" value="true"{% if topic.group_know %} checked{% endif %}>
+                <label class="form-check-label" for="privGroup1">
+                  T
+                </label>
+              </div>
+              <div class="form-check-inline">
+                <input form="form{{ topic.id }}" class="form-check-input" type="checkbox" name="privileges_group_read" id="privGroup2" value="true"{% if topic.group_read %} checked{% endif %}>
+                <label class="form-check-label" for="privGroup2">
+                  L
+                </label>
+              </div>
+              <div class="form-check-inline disabled">
+                <input form="form{{ topic.id }}" class="form-check-input" type="checkbox" name="privileges_group_write" id="privGroup3" value="true"{% if topic.group_write %} checked{% endif %}>
+                <label class="form-check-label" for="privGroup3">
+                  K
+                </label>
+              </div>
+            </fieldset>
+          </td>
+          <td>
+            <input form="form{{ topic.id }}" type="hidden" name="csrf_token" value="{{ session.csrf_token }}">
+            <a class="btn btn-sm btn-primary mb-2 mr-1" href="/edit/topic/{{ topic.id }}?return_url={{ return_url }}{{ topic.id }}">Lisäasetukset</a>
+            <button form="form{{ topic.id }}"  class="btn btn-sm btn-primary mb-2 mr-1" type="submit">Aseta oikeudet</button>
+            <a class="btn btn-sm btn-danger mb-2" href="/delete/topic/{{ topic.id }}">Poista</a>
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+{% endblock %}

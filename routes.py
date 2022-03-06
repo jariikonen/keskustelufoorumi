@@ -17,14 +17,13 @@ def topic_root():
     return redirect('/topics')
 
 @app.route('/topics')
-def topic_list(error=None):
+def topic_list__both(error=None):
     user_memberships = session.get('memberships', (3,))
     user_role = session.get('user_role')
     topic_list = topics.get_topics()
     topic_privileges = topics.get_all_topic_privileges()
     secret_topics = topics.get_secret_topics(
-        topic_list, topic_privileges, user_memberships, user_role
-    )
+        topic_list, topic_privileges, user_memberships, user_role)
     thread_nums = topics.get_num_of_threads(topic_list)
     message_nums = topics.get_num_of_messages(topic_list)
     latest_message_times = topics.get_time_of_latest_message(topic_list)
@@ -58,7 +57,7 @@ def topic(topic_id, error=None):
         return_url = f'topic/{topic_id}'
         return render_template('login.html', return_url=return_url)
 
-    return topic_list(
+    return topic_list__both(
         'Sinulla ei ole lukuoikeutta keskustelualueeseen!'
     ), HTTP_FORBIDDEN
 
@@ -77,7 +76,7 @@ def thread(thread_id, error=None):
     topic_id = message_list[0].topic_id
     topic_privileges = auth.has_privilege(topic_id, PRIVILEGE_READ)
     if not topic_privileges:
-        return topic_list(
+        return topic_list__both(
             'Sinulla ei ole lukuoikeutta keskustelualueeseen!'
         ), HTTP_FORBIDDEN
     logout_return = f'thread/{thread_id}'
@@ -660,33 +659,210 @@ def delete_user__post(user_id):
 
 @app.route('/admin', methods=['GET'])
 def admin_get():
+    return redirect('/admin/topics')
+
+@app.route('/admin/topics', methods=['GET'])
+def admin_topics__get(error=None, topic_dict=None):
+    alert_message = request.args.get('alert_message')
+    alert_class = request.args.get('alert_class')
     if 'username' not in session:
         return render_template('login.html', return_url='admin')
 
     user_role = session.get('user_role')
     if user_role != USER_ROLE__ADMIN and user_role != USER_ROLE__SUPER:
         response_code = HTTP_FORBIDDEN
-        message = 'Vain ylläpitäjät ja pääkäyttäjät saavat käyttää hallintapaneelia'
-        return topic_list(message), response_code
-    return render_template('admin.html')
+        message = 'Vain ylläpitäjät ja pääkäyttäjät saavat käyttää '\
+            + 'hallintapaneelia'
+        return topic_list__both(message), response_code
 
-@app.route('/admin', methods=['POST'])
-def admin_post():
+    topic_list = topics.get_topics_with_privileges()
+    return_url = url.encode('admin/topics#form')
+    return render_template(
+        'admin_topics.html', topic_list=topic_list, error=error,
+        topic_dict=topic_dict, alert_message=alert_message,
+        alert_class=alert_class, return_url=return_url)
+
+@app.route('/new/topic', methods=['POST'])
+def new_topic__post():
     csrf_token = request.form.get('csrf_token')
     if csrf_token != session['csrf_token']:
         error = 'Toimenpide ei ole oikeutettu (puuttuva tunniste)'
-        return render_template('admin.html', error=error), HTTP_FORBIDDEN
+        return admin_topics__get(error), HTTP_FORBIDDEN
+
+    user_role = session.get('user_role')
+    if user_role != USER_ROLE__ADMIN and user_role != USER_ROLE__SUPER:
+        error = 'Vain ylläpitäjät ja pääkäyttäjät voivat lisätä '\
+            + 'keskustelualueita'
+        return topic_list__both(error), HTTP_FORBIDDEN
+
+    topic_dict = topics.form_topic_dict(request.form)
+    error_dict = topics.validate_topic_data(topic_dict)
+    if error_dict:
+        return admin_topics__get(
+            error_dict['message'], topic_dict), error_dict['response_code']
+
+    error_dict = topics.new_topic(topic_dict)
+    if error_dict:
+        return admin_topics__get(
+            error_dict['message'], topic_dict), error_dict['response_code']
+
+    message = url.encode("Keskustelualueen lisääminen onnistui")
+    return redirect(
+        f'/admin/topics?alert_message={message}&alert_class=success')
+
+@app.route('/set_privileges/topic/<int:topic_id>', methods=['POST'])
+def set_privileges_topic__post(topic_id):
+    user_role = session.get('user_role')
+    if user_role != USER_ROLE__ADMIN and user_role != USER_ROLE__SUPER:
+        message = 'Vain ylläpitäjät ja pääkäyttäjät voivat muokata '\
+            + 'keskustelualueita'
+        return render_template(
+            'error.html', HTTP_FORBIDDEN, message=message), HTTP_FORBIDDEN
+
+    csrf_token = request.form.get('csrf_token')
+    if csrf_token != session['csrf_token']:
+        error = 'Toimenpide ei ole oikeutettu (puuttuva tunniste)'
+        return admin_topics__get(error), HTTP_FORBIDDEN
+
+    topic_row = topics.get_topic(topic_id)
+    if not topic_row:
+        return render_template(
+            'error.html', response_code=HTTP_NOT_FOUND,
+            message='Keskustelualuetta ei löytynyt'), HTTP_NOT_FOUND
+
+    topic_dict = topics.form_topic_dict(request.form, topic_id)
+    topics.set_privileges(topic_dict)
+    message = url.encode('Käyttöoikeuksien muuttaminen onnistui')
+    return redirect(
+        f'/admin/topics?alert_message={message}&alert_class=success')
+
+@app.route('/edit/topic/<int:topic_id>', methods=['GET'])
+def edit_topic__get(topic_id, error=None, topic_dict=None):
+    if 'username' not in session:
+        return render_template('login.html', return_url='admin')
 
     user_role = session.get('user_role')
     if user_role != USER_ROLE__ADMIN and user_role != USER_ROLE__SUPER:
         response_code = HTTP_FORBIDDEN
-        message = 'Vain ylläpitäjät ja pääkäyttäjät saavat käyttää hallintapaneelia'
-        return topic_list(message), response_code
+        message = 'Vain ylläpitäjät ja pääkäyttäjät saavat muokata '\
+            + 'keskustelualueita'
+        return topic_list__both(message), response_code
 
-    topic_id, error, response_code = topics.insert_topic(
-        request.form['topic'],
-        request.form['description']
+    topic_row = topics.get_topic(topic_id)
+    if not topic_row:
+        return render_template(
+            'error.html', response_code=HTTP_NOT_FOUND,
+            message='Keskustelualuetta ei löytynyt'), HTTP_NOT_FOUND
+
+    return_url = request.args.get('return_url', '')
+    topic_row = topics.get_topic_with_privileges(topic_id)
+    return render_template(
+        'edit_topic.html', topic=topic_row, return_url=return_url,
+        error=error, topic_dict=topic_dict)
+
+@app.route('/edit/topic/<int:topic_id>', methods=['POST'])
+def edit_topic__post(topic_id):
+    user_role = session.get('user_role')
+    if user_role != USER_ROLE__ADMIN and user_role != USER_ROLE__SUPER:
+        response_code = HTTP_FORBIDDEN
+        message = 'Vain ylläpitäjät ja pääkäyttäjät saavat muokata '\
+            + 'keskustelualueita'
+        return topic_list__both(message), response_code
+
+    csrf_token = request.form.get('csrf_token')
+    if csrf_token != session['csrf_token']:
+        error = 'Toimenpide ei ole oikeutettu (puuttuva tunniste)'
+        return admin_topics__get(error), HTTP_FORBIDDEN
+
+    topic_row = topics.get_topic(topic_id)
+    if not topic_row:
+        return render_template(
+            'error.html', response_code=HTTP_NOT_FOUND,
+            message='Keskustelualuetta ei löytynyt'), HTTP_NOT_FOUND
+
+    topic_dict = topics.form_topic_dict(request.form, topic_id)
+    error_dict = topics.validate_topic_data(topic_dict)
+    if error_dict:
+        return edit_topic__get(
+            topic_id, error_dict['message'], topic_dict
+        ), error_dict['response_code']
+
+    topics.update_topic(topic_dict)
+    message = url.encode('Keskustelualueen tietojen muuttaminen onnistui')
+    return redirect(
+        f'/admin/topics?alert_message={message}&alert_class=success')
+
+@app.route('/delete/topic/<int:topic_id>', methods=['GET'])
+def delete_topic__get(topic_id):
+    user_role = session.get('user_role')
+    if user_role != USER_ROLE__ADMIN and user_role != USER_ROLE__SUPER:
+        message = 'Vain ylläpitäjät ja pääkäyttäjät voivat poistaa '\
+            + 'keskustelualueita'
+        return render_template(
+            'error.html', HTTP_FORBIDDEN, message=message), HTTP_FORBIDDEN
+
+    topic_row = topics.get_topic(topic_id)
+    if not topic_row:
+        return render_template(
+            'error.html', response_code=HTTP_NOT_FOUND,
+            message='Keskustelualuetta ei löytynyt'), HTTP_NOT_FOUND
+
+    return render_template(
+        'confirmation.html', submit_url=f'/delete/topic/{topic_id}',
+        question='Haluatko varmaasti poistaa keskustelualueen?',
+        target_description=f'Keskustelualue: {topic_row.topic}',
+        submit_button_text='Poista', cancel_url=f'/admin/topics#form{topic_id}'
     )
-    if error:
-        return render_template('admin.html', error=error), response_code
-    return redirect(f'/topic/{topic_id}')
+
+@app.route('/delete/topic/<int:topic_id>', methods=['POST'])
+def delete_topic__post(topic_id):
+    user_role = session.get('user_role')
+    if user_role != USER_ROLE__ADMIN and user_role != USER_ROLE__SUPER:
+        message = 'Vain ylläpitäjät ja pääkäyttäjät voivat poistaa '\
+            + 'keskustelualueita'
+        return render_template(
+            'error.html', HTTP_FORBIDDEN, message=message), HTTP_FORBIDDEN
+
+    csrf_token = request.form.get('csrf_token')
+    if csrf_token != session['csrf_token']:
+        error = 'Toimenpide ei ole oikeutettu (puuttuva tunniste)'
+        return admin_topics__get(error), HTTP_FORBIDDEN
+
+    topic_row = topics.get_topic(topic_id)
+    if not topic_row:
+        return render_template(
+            'error.html', response_code=HTTP_NOT_FOUND,
+            message='Keskustelualuetta ei löytynyt'), HTTP_NOT_FOUND
+
+    topics.delete_topic(topic_id)
+    message = url.encode(f"Keskustelualue '{topic_row.topic}' poistettu")
+    return redirect(
+        f'/admin/topics?alert_message={message}&alert_class=success')
+
+@app.route('/admin/users', methods=['GET'])
+def admin_users__get():
+    if 'username' not in session:
+        return render_template('login.html', return_url='admin')
+
+    user_role = session.get('user_role')
+    if user_role != USER_ROLE__ADMIN and user_role != USER_ROLE__SUPER:
+        response_code = HTTP_FORBIDDEN
+        message = 'Vain ylläpitäjät ja pääkäyttäjät saavat käyttää '\
+            + 'hallintapaneelia'
+        return topic_list__both(message), response_code
+
+    return render_template('admin_users.html')
+
+@app.route('/admin/deletions', methods=['GET'])
+def admin_deletions__get():
+    if 'username' not in session:
+        return render_template('login.html', return_url='admin')
+
+    user_role = session.get('user_role')
+    if user_role != USER_ROLE__ADMIN and user_role != USER_ROLE__SUPER:
+        response_code = HTTP_FORBIDDEN
+        message = 'Vain ylläpitäjät ja pääkäyttäjät saavat käyttää '\
+            + 'hallintapaneelia'
+        return topic_list__both(message), response_code
+
+    return render_template('admin_deletions.html')
