@@ -14,7 +14,7 @@ Sovelluksen toiminnallisuuksia (alustava lista):
 * Käyttäjä voi lukea viestiketjun viestit klikkaamalla viestiketjun otsikkoa. (**toteutettu**)
 * Käyttäjä voi (kirjauduttuaan sisään) luoda keskustelualueelle uuden ketjun antamalla ketjun otsikon ja aloitusviestin sisällön. (**toteutettu**)
 * Käyttäjä voi (kirjauduttuaan sisään) kirjoittaa uuden viestin olemassa olevaan ketjuun. (**toteutettu**)
-* Käyttäjä voi (kirjauduttuaan sisään) muokata luomansa ketjun otsikkoa sekä lähettämänsä viestin sisältöä (**toteutettu**). Käyttäjä voi myös poistaa ketjun tai viestin (*tämä vielä toteuttamatta*).
+* Käyttäjä voi (kirjauduttuaan sisään) muokata luomansa ketjun otsikkoa sekä lähettämänsä viestin sisältöä (**toteutettu**). Käyttäjä voi myös poistaa ketjun tai viestin (*käyttäjä voi poistaa viestin, muttei koko ketjua*).
 * Käyttäjä voi etsiä kaikki viestit, joiden osana on annettu sana. (*vielä toteuttamatta*)
 * Ylläpitäjä voi lisätä ja poistaa keskustelualueita. (**toteutettu**)
 * Ylläpitäjä voi luoda salaisen alueen ja määrittää, keillä käyttäjillä on pääsy alueelle. (**toteutettu**)
