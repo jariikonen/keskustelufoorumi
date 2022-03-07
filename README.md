@@ -62,3 +62,5 @@ Viestien ja käyttäjien poistamisessa periaatteena on, että ne poistetaan tiet
 Hakua en ehtinyt toteuttaa, mutta en raatsinut poistaa sitä ulkoasusta.
 
 Sovellusta voi edelleen testata Herokussa osoitteessa https://mysterious-ravine-44883.herokuapp.com/.
+
+**Lisäys deadlinen jälkeen**: Deadlinen mentyä löysin vielä ohjelmasta virheen, jossa kaikkia keskustelualueen poistamiseen liittyviä riippuvuuksia ei oltu huomioitu. Korjasin tämän puutteen deadlinen jälkeen repositoriossa olevaan koodiin, mutta korjaus puuttuu Herokussa olevasta sovelluksesta.
